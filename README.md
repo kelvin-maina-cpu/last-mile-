@@ -13,7 +13,8 @@ A last-mile delivery coordination platform.
     |   |-- api-contract.md
     |   |-- trade-offs.md
     |   |-- testing.md
-    |   `-- demo-script.md
+    |   |-- demo-script.md
+    |   `-- dashboard.md
     |-- presentation/
     `-- README.md
 
