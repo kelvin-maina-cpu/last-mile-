@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reflex - Delivery Coordination</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Reflex</h1>
+        <p>Delivery Coordination System</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Create Delivery Request</h2>
+            <p class="description">
+                Enter the customer's delivery details below.
+            </p>
+
+            <form id="deliveryForm">
+
+                <div class="form-group">
+                    <label for="customerName">Customer Name</label>
+                    <input
+                        type="text"
+                        id="customerName"
+                        name="customerName"
+                        placeholder="Enter customer name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="customerPhone">Customer Phone</label>
+                    <input
+                        type="tel"
+                        id="customerPhone"
+                        name="customerPhone"
+                        placeholder="e.g. 0712345678"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <textarea
+                        id="address"
+                        name="address"
+                        placeholder="Enter delivery address"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemDescription">Item Description</label>
+                    <textarea
+                        id="itemDescription"
+                        name="itemDescription"
+                        placeholder="Describe the item being delivered"
+                        required
+                    ></textarea>
+                </div>
+
+                <button type="submit">
+                    Create Delivery
+                </button>
+
+            </form>
+
+            <div id="message" class="message"></div>
+
+        </section>
+
+        <section id="deliveryResult" class="card hidden">
+            <h2>Delivery Created</h2>
+
+            <div id="deliveryDetails"></div>
+
+            <div class="status">
+                <strong>Status:</strong>
+                <span>REQUESTED</span>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

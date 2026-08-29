@@ -1,0 +1,135 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+    min-height: 100vh;
+}
+
+header {
+    background: #1f2937;
+    color: white;
+    padding: 24px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 6px;
+}
+
+header p {
+    color: #d1d5db;
+}
+
+main {
+    width: 90%;
+    max-width: 700px;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.card h2 {
+    margin-bottom: 8px;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.form-group textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+}
+
+.message.error {
+    display: block;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.message.success {
+    display: block;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f3f4f6;
+    border-radius: 6px;
+}
+
+.status span {
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+#deliveryDetails {
+    line-height: 1.8;
+}
