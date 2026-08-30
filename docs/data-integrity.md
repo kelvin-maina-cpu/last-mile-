@@ -38,9 +38,11 @@ Neither `customerPhone` nor `Rider.phone` is declared `unique` or indexed for lo
 
 There is no `DELETE /api/riders/:id` endpoint yet, so this is currently theoretical, but worth recording before one is added: deleting a `Rider` document would leave any `Delivery.riderId` pointing at a document that no longer exists. Mongoose's `ref` does not cascade or restrict deletes. Whoever implements rider deletion should either block it while the rider has a non-terminal delivery assigned, or explicitly decide what a "dangling" `riderId` should mean on read.
 
-## 8. Invalid ObjectId format relies on a single, generic catch
+## 8. Invalid ObjectId format is now validated upfront
 
-`GET /api/deliveries/:id`, `PATCH /api/deliveries/:id/assign`, and `PATCH /api/deliveries/:id/status` don't validate the `:id` format before querying — malformed ids reach Mongoose, which throws a `CastError`, caught centrally in `backend/src/middleware/errorHandler.js` and translated into the `400 INVALID_ID` response documented in `api-contract.md`. This does match the documented contract, but it's implicit: any new route that queries by id and forgets to route errors through the shared `errorHandler` would leak a raw 500 instead of `INVALID_ID`.
+`getDeliveryById`, `assignRider`, and `updateStatus` in `deliveryService.js` call a `validateId()` helper before querying, so a malformed `:id` is rejected with `400 INVALID_ID` immediately rather than falling through to Mongoose and being caught as a `CastError` in `errorHandler.js`. (An earlier pass of this doc described the CastError catch as the only mechanism — that's been superseded; the centralized catch in `errorHandler.js` is still there as a backstop for any path that skips `validateId()`, which is worth keeping given there's no test yet asserting every id-bearing route calls it.)
+
+Relatedly, `NotFoundError` now takes an explicit `code` argument, so "delivery not found" and "rider not found" responses carry `DELIVERY_NOT_FOUND` / `RIDER_NOT_FOUND` as documented in `api-contract.md`, instead of a generic `NOT_FOUND` both of them used to share — that mismatch against the documented contract existed at the time of the original field-name review in this doc and has since been fixed upstream.
 
 ## Seed data
 
