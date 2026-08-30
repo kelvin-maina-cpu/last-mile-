@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import DeliveryDetail from '../components/delivery/DeliveryDetail'
 import { deliveryService, ApiError } from '../services/api/deliveryService'
 import { useDeliveryUpdates } from '../hooks/useSocket'
 
-const CURRENT_RIDER_ID = 'rider-001'
-
 function DeliveryDetailPage() {
   const { deliveryId } = useParams()
+  const { user } = useAuth()
   const [delivery, setDelivery] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -53,7 +53,7 @@ function DeliveryDetailPage() {
     }
   }, [handleDeliveryUpdate, handleDeliveryRemoved])
 
-  useDeliveryUpdates(CURRENT_RIDER_ID, handleRealtimeEvent)
+  useDeliveryUpdates(user?.id || 'dispatcher-001', handleRealtimeEvent)
 
   useEffect(() => {
     fetchDelivery()

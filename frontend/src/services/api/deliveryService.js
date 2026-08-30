@@ -17,9 +17,11 @@ class DeliveryService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`
+    const token = localStorage.getItem('reflex_token')
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,

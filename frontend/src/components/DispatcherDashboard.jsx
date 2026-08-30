@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../context/AuthContext'
 import DeliveryCard from './delivery/DeliveryCard'
 import RiderAssignment from './RiderAssignment'
 import { deliveryService, ApiError } from '../services/api/deliveryService'
 import { useDeliveryUpdates } from '../hooks/useSocket'
 
-const DISPATCHER_RIDER_ID = 'dispatcher-001'
-
 function DispatcherDashboard() {
+  const { user } = useAuth()
   const [deliveries, setDeliveries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -50,7 +50,7 @@ function DispatcherDashboard() {
     }
   }, [handleDeliveryUpdate])
 
-  const { connectionState } = useDeliveryUpdates(DISPATCHER_RIDER_ID, handleRealtimeEvent)
+  const { connectionState } = useDeliveryUpdates(user?.id || 'dispatcher-001', handleRealtimeEvent)
 
   useEffect(() => {
     fetchDeliveries()

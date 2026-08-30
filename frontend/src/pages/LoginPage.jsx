@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const ROLES = [
   {
@@ -8,6 +9,7 @@ const ROLES = [
     description: 'Create and manage delivery requests for your customers',
     icon: '📦',
     route: '/retailer',
+    demoEmail: 'shop@retailer.co.ke',
   },
   {
     id: 'dispatcher',
@@ -15,6 +17,7 @@ const ROLES = [
     description: 'Assign riders and track all deliveries in your area',
     icon: '🗺️',
     route: '/dispatcher',
+    demoEmail: 'admin@reflex.co.ke',
   },
   {
     id: 'rider',
@@ -22,18 +25,64 @@ const ROLES = [
     description: 'View your assignments and update delivery status',
     icon: '🏍️',
     route: '/rider',
+    demoEmail: 'james@reflex.co.ke',
   },
 ]
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { login, loginWithGoogle, isAuthenticated, user } = useAuth()
   const [selectedRole, setSelectedRole] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleContinue = () => {
-    if (selectedRole) {
-      const role = ROLES.find((r) => r.id === selectedRole)
-      navigate(role.route)
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roleRoutes = {
+        rider: '/rider',
+        dispatcher: '/dispatcher',
+        retailer: '/retailer',
+        customer: '/rider',
+      }
+      navigate(roleRoutes[user.role] || '/login')
     }
+  }, [isAuthenticated, user, navigate])
+
+  // Check for Google OAuth callback data
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const data = params.get('data')
+    if (data) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(data))
+        loginWithGoogle(userData)
+      } catch {
+        console.error('Failed to parse OAuth callback data')
+      }
+    }
+  }, [loginWithGoogle])
+
+  const handleContinue = async () => {
+    if (!selectedRole) return
+    const role = ROLES.find((r) => r.id === selectedRole)
+    if (!role) return
+
+    setError('')
+    setLoading(true)
+
+    try {
+      await login(role.demoEmail, 'password123')
+      navigate(role.route)
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+    window.location.href = `${apiUrl}/auth/google`
   }
 
   return (
@@ -44,6 +93,13 @@ function LoginPage() {
           <h1 className="login-card__title">REFLEX</h1>
           <p className="login-card__subtitle">Select your role to continue</p>
         </div>
+
+        {error && (
+          <div className="error-banner error-banner--compact" role="alert">
+            <span className="error-banner__icon">!</span>
+            <span className="error-banner__message">{error}</span>
+          </div>
+        )}
 
         <div className="role-list">
           {ROLES.map((role) => (
@@ -70,10 +126,26 @@ function LoginPage() {
 
         <button
           className="btn btn--primary btn--block login-card__btn"
-          disabled={!selectedRole}
+          disabled={!selectedRole || loading}
           onClick={handleContinue}
         >
-          Continue as {selectedRole ? ROLES.find((r) => r.id === selectedRole)?.label : '...'}
+          {loading ? (
+            <span className="btn__loading">
+              <span className="btn__spinner" />
+              Signing in...
+            </span>
+          ) : (
+            `Continue as ${selectedRole ? ROLES.find((r) => r.id === selectedRole)?.label : '...'}`
+          )}
+        </button>
+
+        <button
+          className="btn btn--google btn--block login-card__google"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+        >
+          <span className="landing__google-icon">G</span>
+          Continue with Google
         </button>
 
         <button

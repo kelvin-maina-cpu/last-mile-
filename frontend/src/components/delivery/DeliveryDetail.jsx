@@ -1,19 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import StatusBadge from './StatusBadge'
 import StatusControls from './StatusControls'
 import ProofOfDelivery from './ProofOfDelivery'
 import ProofViewer from './ProofViewer'
 
-const CURRENT_RIDER_ID = 'rider-001'
-const RIDER_NAMES = {
-  'rider-001': 'James Mwangi',
-  'rider-002': 'Faith Wanjiku',
-  'rider-003': 'Peter Ochieng',
-}
-
 function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [error, setError] = useState(null)
   const [showPOD, setShowPOD] = useState(false)
   const [showProof, setShowProof] = useState(false)
@@ -45,7 +40,7 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
     onStatusUpdated(updatedDelivery)
   }
 
-  const riderName = RIDER_NAMES[delivery.riderId] || 'Rider'
+  const riderName = user?.name || 'Rider'
 
   return (
     <div className="delivery-detail">
