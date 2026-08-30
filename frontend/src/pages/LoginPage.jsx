@@ -80,8 +80,21 @@ function LoginPage() {
     }
   }
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+    const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+
+    if (useMock) {
+      // Mock Google login — use a demo user
+      const mockData = {
+        token: 'mock-jwt-token-for-demo',
+        user: { id: 'user-google', email: 'user@gmail.com', name: 'Google User', role: 'dispatcher' },
+      }
+      loginWithGoogle(mockData)
+      navigate('/dispatcher')
+      return
+    }
+
     window.location.href = `${apiUrl}/auth/google`
   }
 

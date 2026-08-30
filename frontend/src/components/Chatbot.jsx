@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 const WELCOME_MESSAGE = {
   role: 'assistant',
@@ -14,6 +15,25 @@ const SUGGESTED_QUESTIONS = [
   'How do I verify my delivery?',
   'How do I log in?',
 ]
+
+const MOCK_RESPONSES = {
+  'track': 'To track your delivery, go to the Rider Dashboard. Each delivery shows its current status: ASSIGNED → PICKED_UP → DELIVERED. You\'ll see real-time updates as the rider progresses through each stage.',
+  'proof': 'Proof of Delivery (POD) is a confirmation step for riders. When delivering, the rider verifies the customer\'s ID, optionally takes a photo, and marks the delivery as complete. This ensures accountability.',
+  'rating': 'Rider ratings are submitted by customers after a successful delivery. Ratings range from 1-5 stars and appear on the Rider Dashboard sidebar. Higher ratings help riders get more assignments.',
+  'verify': 'Customers can verify their delivery by providing their Customer ID (shown on their order confirmation) when the rider arrives. The rider enters this ID during the Proof of Delivery step.',
+  'log in': 'To log in, go to the Login page and select your role (Retailer, Dispatcher, or Rider). Enter your credentials and you\'ll be redirected to the appropriate dashboard.',
+  'default': 'I can help with delivery tracking, proof of delivery, rider ratings, customer verification, and login questions. Try asking about one of these topics!',
+}
+
+function getMockResponse(message) {
+  const lower = message.toLowerCase()
+  for (const [key, response] of Object.entries(MOCK_RESPONSES)) {
+    if (key !== 'default' && lower.includes(key)) {
+      return response
+    }
+  }
+  return MOCK_RESPONSES.default
+}
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -44,6 +64,15 @@ function Chatbot() {
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setLoading(true)
+
+    if (USE_MOCK_DATA) {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      const reply = getMockResponse(text.trim())
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/chat`, {

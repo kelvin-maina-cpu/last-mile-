@@ -58,6 +58,11 @@ function LandingPage() {
             LOGIN
           </button>
           <button className="landing__btn landing__btn--google" onClick={() => {
+            const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+            if (useMock) {
+              navigate('/login')
+              return
+            }
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
             window.location.href = `${apiUrl}/auth/google`
           }}>

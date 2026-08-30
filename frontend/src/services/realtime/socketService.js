@@ -1,4 +1,5 @@
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 class SocketService {
   constructor() {
@@ -13,6 +14,13 @@ class SocketService {
 
   connect(riderId) {
     if (this.isConnecting || this.socket?.readyState === WebSocket.OPEN) {
+      return
+    }
+
+    // In mock mode, skip WebSocket — mark as connected for UI purposes
+    if (USE_MOCK_DATA) {
+      this.connectionState = 'connected'
+      this._emit('connectionChange', { state: 'connected' })
       return
     }
 
