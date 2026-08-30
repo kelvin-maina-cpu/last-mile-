@@ -25,36 +25,50 @@ let mockDeliveries = [
     riderId: RIDER_ID,
     customerName: 'Otieno Kamau',
     customerPhone: '0723 987 654',
+    customerId: 'CUST-0723',
     address: "Ruring'u, Nyeri",
     itemDescription: 'HDMI cable, 20W adapter',
     status: 'ASSIGNED',
+    proofOfDelivery: null,
   },
   {
     id: 'DEL-2002',
     riderId: RIDER_ID,
     customerName: 'Achieng Lwanga',
     customerPhone: '0701 222 333',
+    customerId: 'CUST-0701',
     address: 'Kamakwa, Nyeri',
     itemDescription: 'Paracetamol, cough syrup',
     status: 'PICKED_UP',
+    proofOfDelivery: null,
   },
   {
     id: 'DEL-2003',
     riderId: RIDER_ID,
     customerName: 'Kimani Thuo',
     customerPhone: '0745 111 222',
+    customerId: 'CUST-0745',
     address: 'Kiganjo, Nyeri',
     itemDescription: 'Phone screen protector',
     status: 'DELIVERED',
+    proofOfDelivery: {
+      customerIdVerified: true,
+      customerId: 'CUST-0745',
+      photo: null,
+      deliveredBy: 'James Mwangi',
+      timestamp: '2026-08-30T14:30:00.000Z',
+    },
   },
   {
     id: 'DEL-2004',
     riderId: RIDER_ID,
     customerName: 'Wanjiru Njoroge',
     customerPhone: '0733 444 555',
+    customerId: 'CUST-0733',
     address: 'Kamwe, Nyeri',
     itemDescription: '2kg rice, cooking oil',
     status: 'ASSIGNED',
+    proofOfDelivery: null,
   },
 ]
 
@@ -91,6 +105,25 @@ export async function updateMockDeliveryStatus(deliveryId, status) {
   if (index === -1) return null
 
   mockDeliveries[index] = { ...mockDeliveries[index], status }
+  return mockDeliveries[index]
+}
+
+export async function completeMockDeliveryWithPOD(deliveryId, podData) {
+  await wait(500)
+  const index = mockDeliveries.findIndex((d) => d.id === deliveryId)
+  if (index === -1) return null
+
+  mockDeliveries[index] = {
+    ...mockDeliveries[index],
+    status: 'DELIVERED',
+    proofOfDelivery: {
+      customerIdVerified: true,
+      customerId: podData.customerId,
+      photo: podData.photo,
+      deliveredBy: podData.deliveredBy,
+      timestamp: podData.timestamp,
+    },
+  }
   return mockDeliveries[index]
 }
 

@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 // ============================================================
 // TEMPORARY MOCK DATA MODE (Mary, Rider frontend) — see mockDeliveries.js
 // ============================================================
-import { getMockDeliveries, findMockDelivery, updateMockDeliveryStatus, createMockDelivery, getMockRiders, assignMockRider } from './mockDeliveries'
+import { getMockDeliveries, findMockDelivery, updateMockDeliveryStatus, createMockDelivery, getMockRiders, assignMockRider, completeMockDeliveryWithPOD } from './mockDeliveries'
 
 // Turn mock mode on/off with VITE_USE_MOCK_DATA=true|false in
 // frontend/.env (see .env.example). When explicitly enabled, mock
@@ -144,6 +144,27 @@ class DeliveryService {
     }
   }
 
+  // ============================================================
+  // RIDER: Complete delivery with Proof of Delivery
+  // ============================================================
+  async completeDeliveryWithPOD(deliveryId, podData) {
+    if (USE_MOCK_DATA) {
+      const updated = await completeMockDeliveryWithPOD(deliveryId, podData)
+      if (!updated) {
+        throw new ApiError('Delivery not found', 404)
+      }
+      return updated
+    }
+
+    return this.request(`/deliveries/${deliveryId}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(podData),
+    })
+  }
+
+  // ============================================================
+  // Update delivery status (rider action)
+  // ============================================================
   async updateDeliveryStatus(deliveryId, status) {
     // MOCK MODE: explicit override — always serve mock data.
     if (USE_MOCK_DATA) {

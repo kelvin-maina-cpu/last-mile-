@@ -2,11 +2,11 @@ import { deliveryService, ApiError } from '../../services/api/deliveryService'
 
 const STATUS_TRANSITIONS = {
   ASSIGNED: { next: 'PICKED_UP', label: 'Pick Up', variant: 'primary' },
-  PICKED_UP: { next: 'DELIVERED', label: 'Mark Delivered', variant: 'success' },
+  PICKED_UP: { next: 'POD', label: 'Proof of Delivery', variant: 'success' },
   DELIVERED: null,
 }
 
-function StatusControls({ deliveryId, currentStatus, onStatusUpdated, onError }) {
+function StatusControls({ deliveryId, currentStatus, onStatusUpdated, onError, onOpenPOD }) {
   const transition = STATUS_TRANSITIONS[currentStatus]
 
   if (!transition) {
@@ -14,6 +14,12 @@ function StatusControls({ deliveryId, currentStatus, onStatusUpdated, onError })
   }
 
   const handleStatusUpdate = async () => {
+    // If this is the POD trigger, open the POD flow instead
+    if (transition.next === 'POD' && onOpenPOD) {
+      onOpenPOD()
+      return
+    }
+
     try {
       const updatedDelivery = await deliveryService.updateDeliveryStatus(
         deliveryId,
