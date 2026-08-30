@@ -17,6 +17,7 @@
 // (REQUESTED is dispatcher-only and never reaches this screen.)
 
 const RIDER_ID = 'rider-001'
+let nextId = 2005
 
 let mockDeliveries = [
   {
@@ -57,6 +58,12 @@ let mockDeliveries = [
   },
 ]
 
+const mockRiders = [
+  { id: 'rider-001', name: 'James Mwangi', phone: '0712 345 678', available: true },
+  { id: 'rider-002', name: 'Faith Wanjiku', phone: '0723 456 789', available: true },
+  { id: 'rider-003', name: 'Peter Ochieng', phone: '0734 567 890', available: true },
+]
+
 // Simulated network latency so loading states remain visible/testable
 // in mock mode too (dashboard spinner, detail spinner).
 function wait(ms) {
@@ -65,9 +72,12 @@ function wait(ms) {
 
 export async function getMockDeliveries(riderId) {
   await wait(400)
-  // Demo dataset only knows about one rider; return an empty list for
-  // any other id rather than leaking data across "riders" in the demo.
-  return mockDeliveries.filter((d) => d.riderId === riderId)
+  if (riderId) {
+    // Rider view: return only deliveries assigned to this rider
+    return mockDeliveries.filter((d) => d.riderId === riderId)
+  }
+  // Dispatcher view: return all deliveries
+  return [...mockDeliveries]
 }
 
 export async function findMockDelivery(deliveryId) {
@@ -81,5 +91,40 @@ export async function updateMockDeliveryStatus(deliveryId, status) {
   if (index === -1) return null
 
   mockDeliveries[index] = { ...mockDeliveries[index], status }
+  return mockDeliveries[index]
+}
+
+// ============================================================
+// MOCK HELPERS — Retailer / Dispatcher
+// ============================================================
+
+export async function createMockDelivery(deliveryData) {
+  await wait(400)
+  const newDelivery = {
+    id: `DEL-${nextId++}`,
+    ...deliveryData,
+    status: 'OPEN',
+    riderId: null,
+    createdAt: new Date().toISOString(),
+  }
+  mockDeliveries.push(newDelivery)
+  return newDelivery
+}
+
+export async function getMockRiders() {
+  await wait(300)
+  return [...mockRiders]
+}
+
+export async function assignMockRider(deliveryId, riderId) {
+  await wait(350)
+  const index = mockDeliveries.findIndex((d) => d.id === deliveryId)
+  if (index === -1) return null
+
+  mockDeliveries[index] = {
+    ...mockDeliveries[index],
+    riderId,
+    status: 'ASSIGNED',
+  }
   return mockDeliveries[index]
 }

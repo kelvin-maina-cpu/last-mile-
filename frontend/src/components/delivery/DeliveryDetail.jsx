@@ -11,7 +11,7 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
     return (
       <div className="delivery-detail delivery-detail--empty">
         <p>Delivery not found.</p>
-        <button className="btn btn--secondary" onClick={() => navigate('/')}>
+        <button className="btn btn--secondary" onClick={() => navigate('/rider')}>
           Back to Dashboard
         </button>
       </div>

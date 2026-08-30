@@ -3,12 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 // ============================================================
 // TEMPORARY MOCK DATA MODE (Mary, Rider frontend) — see mockDeliveries.js
 // ============================================================
-// Everything in this block/marked "MOCK MODE" below is temporary UI
-// dev tooling, not part of the real API contract. To remove later:
-// delete mockDeliveries.js and the blocks marked "MOCK MODE" in this
-// file. The real fetch-based request path below is untouched and
-// remains the production path.
-import { getMockDeliveries, findMockDelivery, updateMockDeliveryStatus } from './mockDeliveries'
+import { getMockDeliveries, findMockDelivery, updateMockDeliveryStatus, createMockDelivery, getMockRiders, assignMockRider } from './mockDeliveries'
 
 // Turn mock mode on/off with VITE_USE_MOCK_DATA=true|false in
 // frontend/.env (see .env.example). When explicitly enabled, mock
@@ -49,6 +44,59 @@ class DeliveryService {
     }
   }
 
+  // ============================================================
+  // RETAILER: Create a new delivery
+  // ============================================================
+  async createDelivery(deliveryData) {
+    if (USE_MOCK_DATA) {
+      return createMockDelivery(deliveryData)
+    }
+
+    return this.request('/deliveries', {
+      method: 'POST',
+      body: JSON.stringify(deliveryData),
+    })
+  }
+
+  // ============================================================
+  // DISPATCHER: Get all deliveries
+  // ============================================================
+  async getDeliveries() {
+    if (USE_MOCK_DATA) {
+      return getMockDeliveries()
+    }
+
+    return this.request('/deliveries')
+  }
+
+  // ============================================================
+  // DISPATCHER: Get available riders
+  // ============================================================
+  async getAvailableRiders() {
+    if (USE_MOCK_DATA) {
+      return getMockRiders()
+    }
+
+    return this.request('/riders')
+  }
+
+  // ============================================================
+  // DISPATCHER: Assign a rider to a delivery
+  // ============================================================
+  async assignRider(deliveryId, riderId) {
+    if (USE_MOCK_DATA) {
+      return assignMockRider(deliveryId, riderId)
+    }
+
+    return this.request(`/deliveries/${deliveryId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ riderId }),
+    })
+  }
+
+  // ============================================================
+  // RIDER: Get assigned deliveries
+  // ============================================================
   async getAssignedDeliveries(riderId) {
     // MOCK MODE: explicit override — always serve mock data.
     if (USE_MOCK_DATA) {
