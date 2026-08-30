@@ -136,8 +136,10 @@ export async function createMockDelivery(deliveryData) {
   const newDelivery = {
     id: `DEL-${nextId++}`,
     ...deliveryData,
+    customerId: deliveryData.customerId || `CUST-${(deliveryData.customerPhone || '0000').replace(/\D/g, '').slice(-4)}`,
     status: 'OPEN',
     riderId: null,
+    proofOfDelivery: null,
     createdAt: new Date().toISOString(),
   }
   mockDeliveries.push(newDelivery)

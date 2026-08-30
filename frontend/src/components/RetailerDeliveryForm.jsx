@@ -91,6 +91,13 @@ function RetailerDeliveryForm() {
               <label>Delivery ID</label>
               <p>#{createdDelivery.id}</p>
             </div>
+            {createdDelivery.customerId && (
+              <div className="success-card__field success-card__field--highlight">
+                <label>Customer ID</label>
+                <p className="success-card__customerId">{createdDelivery.customerId}</p>
+                <span className="success-card__hint">Share this ID with the customer for verification</span>
+              </div>
+            )}
             <div className="success-card__field">
               <label>Customer</label>
               <p>{createdDelivery.customerName}</p>
@@ -111,6 +118,7 @@ function RetailerDeliveryForm() {
               <label>Status</label>
               <p className="success-card__status">OPEN — Waiting for dispatcher</p>
             </div>
+            <p className="success-card__note">Customer ID: <strong>{createdDelivery.customerId}</strong> — give this to the customer so they can verify delivery.</p>
           </div>
           <button
             className="btn btn--primary"

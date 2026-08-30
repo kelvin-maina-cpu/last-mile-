@@ -193,7 +193,7 @@ function ProofOfDelivery({ delivery, riderName, onComplete, onCancel }) {
           type="text"
           id="customerId"
           className={`form-input ${customerIdError ? 'form-input--error' : ''}`}
-          placeholder={`e.g. ${delivery.customerId}`}
+          placeholder="Enter Customer ID"
           value={customerId}
           onChange={(e) => {
             setCustomerId(e.target.value)

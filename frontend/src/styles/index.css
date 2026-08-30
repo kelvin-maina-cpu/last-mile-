@@ -611,6 +611,42 @@ body {
   font-weight: 600;
 }
 
+.success-card__field--highlight {
+  background: rgba(124, 77, 255, 0.1);
+  border: 1px solid rgba(124, 77, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.success-card__customerId {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 1px;
+  margin: 4px 0;
+}
+
+.success-card__hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+.success-card__note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.success-card__note strong {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
 /* === Dispatcher Dashboard === */
 .dispatcher-dashboard__header {
   display: flex;
