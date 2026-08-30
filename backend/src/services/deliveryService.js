@@ -5,7 +5,17 @@ const {
   ValidationError,
   InvalidTransitionError,
   RiderUnavailableError,
+  InvalidIdError,
 } = require('../utils/errors');
+
+const mongoose = require('mongoose');
+
+// Validate ObjectId format before DB queries
+function validateId(id, resource) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new InvalidIdError(resource);
+  }
+}
 
 // State machine — centralized transition rules
 const VALID_TRANSITIONS = {
@@ -44,18 +54,23 @@ async function listDeliveries(status) {
 
 // Get a single delivery by ID
 async function getDeliveryById(id) {
+  validateId(id, 'delivery');
   const delivery = await Delivery.findById(id);
   if (!delivery) {
-    throw new NotFoundError('Delivery not found');
+    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
   }
+
   return delivery;
 }
 
 // Assign a rider to a delivery
 async function assignRider(deliveryId, riderId) {
+  validateId(deliveryId, 'delivery');
+  validateId(riderId, 'rider');
+
   const delivery = await Delivery.findById(deliveryId);
   if (!delivery) {
-    throw new NotFoundError('Delivery not found');
+    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
   }
 
   if (delivery.status !== 'REQUESTED') {
@@ -66,7 +81,7 @@ async function assignRider(deliveryId, riderId) {
 
   const rider = await Rider.findById(riderId);
   if (!rider) {
-    throw new NotFoundError('Rider not found');
+    throw new NotFoundError('Rider not found', 'RIDER_NOT_FOUND');
   }
 
   if (!rider.available) {
@@ -87,6 +102,8 @@ async function assignRider(deliveryId, riderId) {
 
 // Update delivery status (enforce state machine)
 async function updateStatus(deliveryId, newStatus) {
+  validateId(deliveryId, 'delivery');
+
   const validStatusValues = ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'];
   if (!validStatusValues.includes(newStatus)) {
     throw new ValidationError(
@@ -97,7 +114,7 @@ async function updateStatus(deliveryId, newStatus) {
 
   const delivery = await Delivery.findById(deliveryId);
   if (!delivery) {
-    throw new NotFoundError('Delivery not found');
+    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
   }
 
   if (!canTransition(delivery.status, newStatus)) {

@@ -75,19 +75,14 @@ backend/
 └── README.md
 ```
 
-## API Endpoints (Implemented)
-
-| Method | Endpoint | Status |
-|--------|----------|--------|
-| GET | `/api/health` | ✅ Implemented |
-
-## API Endpoints (Planned)
+## API Endpoints
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| POST | `/api/deliveries` | Create a delivery request |
-| GET | `/api/deliveries` | List deliveries |
-| GET | `/api/deliveries/:id` | Get a single delivery |
-| PATCH | `/api/deliveries/:id/assign` | Assign a rider |
-| PATCH | `/api/deliveries/:id/status` | Update delivery status |
-| GET | `/api/riders` | List riders |
+| GET | `/api/health` | Health check — returns server status and DB connectivity |
+| POST | `/api/deliveries` | Create a new delivery request (status: REQUESTED) |
+| GET | `/api/deliveries` | List all deliveries (optional `?status=` filter) |
+| GET | `/api/deliveries/:id` | Get a single delivery by ID |
+| PATCH | `/api/deliveries/:id/assign` | Assign a rider to a delivery |
+| PATCH | `/api/deliveries/:id/status` | Update delivery status (state machine enforced) |
+| GET | `/api/riders` | List all riders (optional `?available=` filter) |
