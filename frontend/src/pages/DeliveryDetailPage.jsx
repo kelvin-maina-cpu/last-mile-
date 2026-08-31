@@ -34,8 +34,11 @@ function DeliveryDetailPage() {
   }, [deliveryId])
 
   const handleDeliveryUpdate = useCallback((updatedDelivery) => {
-    if (updatedDelivery.id === deliveryId) {
-      setDelivery(updatedDelivery)
+    // Backend emits { delivery: {...} }
+    const delivery = updatedDelivery.delivery || updatedDelivery
+    const id = delivery._id || delivery.id
+    if (id === deliveryId) {
+      setDelivery(delivery)
     }
   }, [deliveryId])
 
@@ -53,7 +56,7 @@ function DeliveryDetailPage() {
     }
   }, [handleDeliveryUpdate, handleDeliveryRemoved])
 
-  useDeliveryUpdates(user?.id || 'dispatcher-001', handleRealtimeEvent)
+  useDeliveryUpdates(handleRealtimeEvent)
 
   useEffect(() => {
     fetchDelivery()

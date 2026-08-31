@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs'
+import logger from '../utils/logger.js'
 
 // In-memory data store for the demo
 const store = {
@@ -298,7 +299,7 @@ function executeQuery(sql, params, mode) {
     return { changes: 0 }
   }
 
-  console.warn('[DB] Unhandled query:', normalizedSql.substring(0, 100))
+  logger.warn({ query: normalizedSql.substring(0, 100) }, 'Unhandled query')
   return mode === 'all' ? [] : undefined
 }
 
@@ -396,8 +397,7 @@ export function initializeDatabase() {
     { id: 'rat-023', rider_id: 'rider-005', delivery_id: null, customer_name: 'Charles Odongo', rating: 4, comment: 'Good job', created_at: '2026-08-26T10:00:00.000Z' },
   ]
 
-  console.log('[DB] Seed data loaded successfully')
-  console.log(`[DB] ${store.users.length} users, ${store.deliveries.length} deliveries, ${store.riderRatings.length} ratings`)
+  logger.info({ users: store.users.length, deliveries: store.deliveries.length, ratings: store.riderRatings.length }, 'Seed data loaded')
 }
 
 

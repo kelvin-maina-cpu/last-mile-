@@ -25,7 +25,7 @@ router.get('/', authenticateToken, (req, res) => {
       license_plate: r.license_plate,
     })))
   } catch (error) {
-    console.error('[Riders] Get all error:', error)
+    req.log.error({ err: error }, 'Failed to fetch riders')
     res.status(500).json({ error: 'Failed to fetch riders' })
   }
 })
@@ -56,7 +56,7 @@ router.get('/:id', authenticateToken, (req, res) => {
       available: rider.available === 1,
     })
   } catch (error) {
-    console.error('[Riders] Get one error:', error)
+    req.log.error({ err: error }, 'Failed to fetch rider')
     res.status(500).json({ error: 'Failed to fetch rider' })
   }
 })
@@ -72,7 +72,7 @@ router.get('/:id/deliveries', authenticateToken, (req, res) => {
       proof_of_delivery: d.proof_of_delivery ? JSON.parse(d.proof_of_delivery) : null,
     })))
   } catch (error) {
-    console.error('[Riders] Get deliveries error:', error)
+    req.log.error({ err: error }, 'Failed to fetch rider deliveries')
     res.status(500).json({ error: 'Failed to fetch rider deliveries' })
   }
 })
@@ -122,7 +122,7 @@ router.get('/:id/rating', authenticateToken, (req, res) => {
       recentRatings: recent,
     })
   } catch (error) {
-    console.error('[Riders] Get rating error:', error)
+    req.log.error({ err: error }, 'Failed to fetch rider rating')
     res.status(500).json({ error: 'Failed to fetch rider rating' })
   }
 })

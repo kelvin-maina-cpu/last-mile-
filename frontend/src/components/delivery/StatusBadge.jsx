@@ -1,12 +1,12 @@
 const STATUS_LABELS = {
-  OPEN: 'Open',
+  REQUESTED: 'Requested',
   ASSIGNED: 'Assigned',
   PICKED_UP: 'Picked Up',
   DELIVERED: 'Delivered',
 }
 
 const STATUS_COLORS = {
-  OPEN: { bg: 'rgba(33, 150, 243, 0.2)', text: '#90caf9', border: '#1976d2' },
+  REQUESTED: { bg: 'rgba(33, 150, 243, 0.2)', text: '#90caf9', border: '#1976d2' },
   ASSIGNED: { bg: 'rgba(124, 45, 158, 0.25)', text: '#d9b3f0', border: '#7c2d9e' },
   PICKED_UP: { bg: 'rgba(230, 81, 0, 0.2)', text: '#ffb877', border: '#e65100' },
   DELIVERED: { bg: 'rgba(46, 125, 50, 0.2)', text: '#8ee39b', border: '#2e7d32' },

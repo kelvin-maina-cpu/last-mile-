@@ -1,8 +1,33 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiFetch, API_BASE_URL, HAS_PRIMARY_BACKEND, USE_MOCK_AUTH } from '../config/apiConfig'
 
 const AuthContext = createContext(null)
+
+// Demo users for when backend auth is not available
+const DEMO_USERS = {
+  retailer: {
+    id: 'retailer-001',
+    name: 'Shop Owner',
+    email: 'shop@retailer.co.ke',
+    role: 'retailer',
+  },
+  dispatcher: {
+    id: 'dispatcher-001',
+    name: 'Admin Dispatcher',
+    email: 'admin@reflex.co.ke',
+    role: 'dispatcher',
+  },
+  rider: {
+    id: 'rider-001',
+    name: 'James Mwangi',
+    email: 'james@reflex.co.ke',
+    role: 'rider',
+    riderProfile: {
+      vehicle_type: 'Motorcycle',
+      phone: '+254712345678',
+    },
+  },
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -33,87 +58,51 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = useCallback(async (email, password) => {
-    // If mock auth is explicitly enabled, bypass the real backend
-    if (USE_MOCK_AUTH) {
-      console.log('[Auth] Using mock authentication (VITE_USE_MOCK_AUTH=true)')
-      throw new Error('Mock auth is not configured. Set up a real backend or configure mock data.')
+    // Demo mode: bypass real auth
+    // Match email to demo user
+    const role = Object.keys(DEMO_USERS).find(
+      (r) => DEMO_USERS[r].email === email
+    )
+
+    if (role) {
+      const demoUser = DEMO_USERS[role]
+      const demoToken = `demo-token-${role}-${Date.now()}`
+
+      localStorage.setItem('reflex_token', demoToken)
+      localStorage.setItem('reflex_user', JSON.stringify(demoUser))
+      if (demoUser.riderProfile) {
+        localStorage.setItem('reflex_rider_profile', JSON.stringify(demoUser.riderProfile))
+      }
+
+      setToken(demoToken)
+      setUser(demoUser)
+      setRiderProfile(demoUser.riderProfile || null)
+
+      return { token: demoToken, user: demoUser }
     }
 
-    try {
-      const response = await apiFetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Login failed' }))
-        throw new Error(error.error || 'Login failed')
-      }
-
-      const data = await response.json()
-
-      localStorage.setItem('reflex_token', data.token)
-      localStorage.setItem('reflex_user', JSON.stringify(data.user))
-      if (data.riderProfile) {
-        localStorage.setItem('reflex_rider_profile', JSON.stringify(data.riderProfile))
-      }
-
-      setToken(data.token)
-      setUser(data.user)
-      setRiderProfile(data.riderProfile || null)
-
-      return data
-    } catch (err) {
-      // If primary backend is unreachable and no fallback auth exists,
-      // report the failure clearly — do NOT silently log in
-      if (!HAS_PRIMARY_BACKEND) {
-        console.error('[Auth] No primary backend configured and fallback has no auth endpoint')
-        throw new Error('Authentication service is unavailable. Please try again later.')
-      }
-      throw err
+    // If no match, create a generic user
+    const genericUser = {
+      id: `user-${Date.now()}`,
+      name: email.split('@')[0],
+      email,
+      role: 'rider',
     }
+    const genericToken = `demo-token-${Date.now()}`
+
+    localStorage.setItem('reflex_token', genericToken)
+    localStorage.setItem('reflex_user', JSON.stringify(genericUser))
+
+    setToken(genericToken)
+    setUser(genericUser)
+
+    return { token: genericToken, user: genericUser }
   }, [])
 
   const register = useCallback(async (email, password, name, role, phone) => {
-    if (USE_MOCK_AUTH) {
-      console.log('[Auth] Using mock authentication (VITE_USE_MOCK_AUTH=true)')
-      throw new Error('Mock auth is not configured. Set up a real backend or configure mock data.')
-    }
-
-    try {
-      const response = await apiFetch('/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, role, phone }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Registration failed' }))
-        throw new Error(error.error || 'Registration failed')
-      }
-
-      const data = await response.json()
-
-      localStorage.setItem('reflex_token', data.token)
-      localStorage.setItem('reflex_user', JSON.stringify(data.user))
-      if (data.riderProfile) {
-        localStorage.setItem('reflex_rider_profile', JSON.stringify(data.riderProfile))
-      }
-
-      setToken(data.token)
-      setUser(data.user)
-      setRiderProfile(data.riderProfile || null)
-
-      return data
-    } catch (err) {
-      if (!HAS_PRIMARY_BACKEND) {
-        console.error('[Auth] No primary backend configured and fallback has no auth endpoint')
-        throw new Error('Registration service is unavailable. Please try again later.')
-      }
-      throw err
-    }
-  }, [])
+    // Demo mode: same as login
+    return login(email, password)
+  }, [login])
 
   const loginWithGoogle = useCallback(async (userData) => {
     localStorage.setItem('reflex_token', userData.token)

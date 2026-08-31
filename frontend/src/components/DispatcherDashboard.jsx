@@ -32,7 +32,8 @@ function DispatcherDashboard() {
 
   const handleDeliveryUpdate = useCallback((updatedDelivery) => {
     setDeliveries((prev) => {
-      const index = prev.findIndex((d) => d.id === updatedDelivery.id)
+      const id = updatedDelivery._id || updatedDelivery.id
+      const index = prev.findIndex((d) => (d._id || d.id) === id)
       if (index === -1) {
         return [updatedDelivery, ...prev]
       }
@@ -43,14 +44,14 @@ function DispatcherDashboard() {
   }, [])
 
   const handleRealtimeEvent = useCallback((payload) => {
-    if (payload.type === 'deliveryRemoved') {
-      setDeliveries((prev) => prev.filter((d) => d.id !== payload.deliveryId))
-    } else {
-      handleDeliveryUpdate(payload)
+    // Backend emits { delivery: {...} } or { delivery: {...}, rider: {...} }
+    const delivery = payload.delivery || payload
+    if (delivery) {
+      handleDeliveryUpdate(delivery)
     }
   }, [handleDeliveryUpdate])
 
-  const { connectionState } = useDeliveryUpdates(user?.id || 'dispatcher-001', handleRealtimeEvent)
+  const { connectionState } = useDeliveryUpdates(handleRealtimeEvent)
 
   useEffect(() => {
     fetchDeliveries()
@@ -61,9 +62,10 @@ function DispatcherDashboard() {
     return d.status === filter
   })
 
+  // Backend uses REQUESTED, not OPEN
   const statusCounts = {
     all: deliveries.length,
-    OPEN: deliveries.filter((d) => d.status === 'OPEN').length,
+    REQUESTED: deliveries.filter((d) => d.status === 'REQUESTED').length,
     ASSIGNED: deliveries.filter((d) => d.status === 'ASSIGNED').length,
     PICKED_UP: deliveries.filter((d) => d.status === 'PICKED_UP').length,
     DELIVERED: deliveries.filter((d) => d.status === 'DELIVERED').length,
@@ -100,9 +102,9 @@ function DispatcherDashboard() {
         </div>
       )}
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs — uses REQUESTED instead of OPEN */}
       <div className="filter-tabs">
-        {['all', 'OPEN', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'].map((tab) => (
+        {['all', 'REQUESTED', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'].map((tab) => (
           <button
             key={tab}
             className={`filter-tab ${filter === tab ? 'filter-tab--active' : ''}`}
@@ -135,22 +137,26 @@ function DispatcherDashboard() {
         </div>
       ) : (
         <div className="delivery-grid">
-          {filteredDeliveries.map((delivery) => (
-            <div key={delivery.id} className="dispatcher-card-wrapper">
-              <DeliveryCard delivery={delivery} />
-              {delivery.status === 'OPEN' && (
-                <button
-                  className="btn btn--primary btn--assign"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setSelectedDelivery(delivery)
-                  }}
-                >
-                  Assign Rider
-                </button>
-              )}
-            </div>
-          ))}
+          {filteredDeliveries.map((delivery) => {
+            const id = delivery._id || delivery.id
+            return (
+              <div key={id} className="dispatcher-card-wrapper">
+                <DeliveryCard delivery={delivery} />
+                {/* Only REQUESTED deliveries can be assigned */}
+                {delivery.status === 'REQUESTED' && (
+                  <button
+                    className="btn btn--primary btn--assign"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setSelectedDelivery(delivery)
+                    }}
+                  >
+                    Assign Rider
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

@@ -50,7 +50,7 @@ router.post('/login', (req, res) => {
       riderProfile,
     })
   } catch (error) {
-    console.error('[Auth] Login error:', error)
+    req.log.error({ err: error }, 'Login failed')
     res.status(500).json({ error: 'Internal server error' })
   }
 })
@@ -62,6 +62,11 @@ router.post('/register', (req, res) => {
 
     if (!email || !password || !name || !role) {
       return res.status(400).json({ error: 'Email, password, name, and role are required' })
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' })
     }
 
     const db = getDb()
@@ -104,7 +109,7 @@ router.post('/register', (req, res) => {
       riderProfile,
     })
   } catch (error) {
-    console.error('[Auth] Register error:', error)
+    req.log.error({ err: error }, 'Registration failed')
     res.status(500).json({ error: 'Internal server error' })
   }
 })
@@ -124,7 +129,7 @@ router.get('/me', authenticateToken, (req, res) => {
       riderProfile,
     })
   } catch (error) {
-    console.error('[Auth] Me error:', error)
+    req.log.error({ err: error }, 'Failed to fetch current user')
     res.status(500).json({ error: 'Internal server error' })
   }
 })
@@ -278,13 +283,17 @@ router.get('/google/callback', async (req, res) => {
 
     res.redirect(`${frontendUrl}/auth/google/callback?data=${userData}`)
   } catch (error) {
-    console.error('[Auth] Google callback error:', error)
+    req.log.error({ err: error }, 'Google OAuth callback failed')
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_auth_failed`)
   }
 })
 
-// GET /api/auth/demo-accounts - List demo accounts for login help
+// GET /api/auth/demo-accounts - List demo accounts (development only)
 router.get('/demo-accounts', (req, res) => {
+  // Disable in production to prevent credential leakage
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' })
+  }
   try {
     const db = getDb()
     const users = db.prepare(`
@@ -303,11 +312,10 @@ router.get('/demo-accounts', (req, res) => {
         role: u.role,
         phone: u.phone,
         vehicle_type: u.vehicle_type,
-        password: 'password123',
       }))
     })
   } catch (error) {
-    console.error('[Auth] Demo accounts error:', error)
+    req.log.error({ err: error }, 'Failed to fetch demo accounts')
     res.status(500).json({ error: 'Internal server error' })
   }
 })

@@ -91,7 +91,7 @@ router.post('/', optionalAuth, (req, res) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('[Chat] Error:', error)
+    req.log.error({ err: error }, 'Chat message processing failed')
     res.status(500).json({ error: 'Failed to process message' })
   }
 })

@@ -11,7 +11,7 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
   useEffect(() => {
     const fetchRiders = async () => {
       try {
-        const data = await deliveryService.getAvailableRiders()
+        const data = await deliveryService.getRiders()
         setRiders(data)
       } catch (err) {
         if (err instanceof ApiError) {
@@ -32,11 +32,19 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
     setAssigning(true)
     setError(null)
     try {
-      const updated = await deliveryService.assignRider(delivery.id, selectedRiderId)
+      const deliveryId = delivery._id || delivery.id
+      const updated = await deliveryService.assignRider(deliveryId, selectedRiderId)
       onSuccess(updated)
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message)
+        // Show specific error for unavailable rider
+        if (err.code === 'RIDER_UNAVAILABLE') {
+          setError('That rider is no longer available. Please select another rider.')
+        } else if (err.code === 'INVALID_TRANSITION') {
+          setError('This delivery cannot be assigned. It may have already been assigned.')
+        } else {
+          setError(err.message)
+        }
       } else {
         setError('Failed to assign rider. Please try again.')
       }
@@ -45,7 +53,9 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
     }
   }
 
-  const selectedRider = riders.find((r) => r.id === selectedRiderId)
+  const selectedRider = riders.find((r) => (r._id || r.id) === selectedRiderId)
+  // Backend uses _id, frontend may use id
+  const deliveryId = delivery._id || delivery.id
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -59,9 +69,9 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
 
         <div className="modal__body">
           <div className="modal__delivery-info">
-            <p className="modal__delivery-label">Delivery #{delivery.id}</p>
+            <p className="modal__delivery-label">Delivery #{deliveryId.slice(-6)}</p>
             <p className="modal__delivery-customer">{delivery.customerName}</p>
-            <p className="modal__delivery-address">{delivery.address}</p>
+            <p className="modal__delivery-address">{delivery.deliveryAddress}</p>
           </div>
 
           {error && (
@@ -77,33 +87,36 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
             </div>
           ) : riders.length === 0 ? (
             <div className="empty-state empty-state--compact">
-              <p>No available riders found.</p>
+              <p>No riders found.</p>
             </div>
           ) : (
             <div className="rider-list">
-              {riders.map((rider) => (
-                <label
-                  key={rider.id}
-                  className={`rider-option ${selectedRiderId === rider.id ? 'rider-option--selected' : ''}`}
-                >
-                  <input
-                    type="radio"
-                    name="rider"
-                    value={rider.id}
-                    checked={selectedRiderId === rider.id}
-                    onChange={() => setSelectedRiderId(rider.id)}
-                    disabled={assigning}
-                    className="rider-option__radio"
-                  />
-                  <div className="rider-option__info">
-                    <span className="rider-option__name">{rider.name}</span>
-                    <span className="rider-option__phone">{rider.phone}</span>
-                  </div>
-                  <span className="rider-option__status">
-                    {rider.available ? 'Available' : 'Busy'}
-                  </span>
-                </label>
-              ))}
+              {riders.map((rider) => {
+                const riderId = rider._id || rider.id
+                return (
+                  <label
+                    key={riderId}
+                    className={`rider-option ${selectedRiderId === riderId ? 'rider-option--selected' : ''} ${!rider.available ? 'rider-option--unavailable' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="rider"
+                      value={riderId}
+                      checked={selectedRiderId === riderId}
+                      onChange={() => setSelectedRiderId(riderId)}
+                      disabled={assigning || !rider.available}
+                      className="rider-option__radio"
+                    />
+                    <div className="rider-option__info">
+                      <span className="rider-option__name">{rider.name}</span>
+                      <span className="rider-option__phone">{rider.phone}</span>
+                    </div>
+                    <span className="rider-option__status">
+                      {rider.available ? 'Available' : 'Busy'}
+                    </span>
+                  </label>
+                )
+              })}
             </div>
           )}
         </div>

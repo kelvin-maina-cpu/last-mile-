@@ -4,7 +4,7 @@ import { deliveryService, ApiError } from '../services/api/deliveryService'
 const INITIAL_FORM = {
   customerName: '',
   customerPhone: '',
-  address: '',
+  deliveryAddress: '',
   itemDescription: '',
 }
 
@@ -28,8 +28,8 @@ function RetailerDeliveryForm() {
       newErrors.customerPhone = 'Please enter a valid phone number'
     }
 
-    if (!form.address.trim()) {
-      newErrors.address = 'Delivery address is required'
+    if (!form.deliveryAddress.trim()) {
+      newErrors.deliveryAddress = 'Delivery address is required'
     }
 
     if (!form.itemDescription.trim()) {
@@ -64,7 +64,7 @@ function RetailerDeliveryForm() {
       const delivery = await deliveryService.createDelivery({
         customerName: form.customerName.trim(),
         customerPhone: form.customerPhone.trim(),
-        address: form.address.trim(),
+        deliveryAddress: form.deliveryAddress.trim(),
         itemDescription: form.itemDescription.trim(),
       })
       setCreatedDelivery(delivery)
@@ -108,7 +108,7 @@ function RetailerDeliveryForm() {
             </div>
             <div className="success-card__field">
               <label>Address</label>
-              <p>{createdDelivery.address}</p>
+              <p>{createdDelivery.deliveryAddress}</p>
             </div>
             <div className="success-card__field">
               <label>Item</label>
@@ -116,7 +116,7 @@ function RetailerDeliveryForm() {
             </div>
             <div className="success-card__field">
               <label>Status</label>
-              <p className="success-card__status">OPEN — Waiting for dispatcher</p>
+              <p className="success-card__status">REQUESTED — Waiting for dispatcher</p>
             </div>
             <p className="success-card__note">Customer ID: <strong>{createdDelivery.customerId}</strong> — give this to the customer so they can verify delivery.</p>
           </div>
@@ -193,21 +193,21 @@ function RetailerDeliveryForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="address" className="form-label">
+          <label htmlFor="deliveryAddress" className="form-label">
             Delivery Address <span className="form-label__required">*</span>
           </label>
           <input
             type="text"
-            id="address"
-            name="address"
-            className={`form-input ${errors.address ? 'form-input--error' : ''}`}
+            id="deliveryAddress"
+            name="deliveryAddress"
+            className={`form-input ${errors.deliveryAddress ? 'form-input--error' : ''}`}
             placeholder="e.g. Kiganjo, Nyeri"
-            value={form.address}
+            value={form.deliveryAddress}
             onChange={handleChange}
             disabled={loading}
           />
-          {errors.address && (
-            <span className="form-error">{errors.address}</span>
+          {errors.deliveryAddress && (
+            <span className="form-error">{errors.deliveryAddress}</span>
           )}
         </div>
 

@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { socketService } from '../services/realtime/socketService'
 
-export function useSocket(riderId) {
+export function useSocket() {
   const [connectionState, setConnectionState] = useState(socketService.getConnectionState())
 
   useEffect(() => {
-    if (!riderId) return
-
-    socketService.connect(riderId)
+    // Connect to Socket.IO (no riderId needed for MVP)
+    socketService.connect()
 
     const unsubscribe = socketService.on('connectionChange', ({ state }) => {
       setConnectionState(state)
@@ -17,7 +16,7 @@ export function useSocket(riderId) {
       unsubscribe()
       socketService.disconnect()
     }
-  }, [riderId])
+  }, [])
 
   const subscribe = useCallback((event, callback) => {
     return socketService.on(event, callback)
@@ -26,14 +25,15 @@ export function useSocket(riderId) {
   return { connectionState, subscribe }
 }
 
-export function useDeliveryUpdates(riderId, onDeliveryUpdate) {
-  const { connectionState, subscribe } = useSocket(riderId)
+export function useDeliveryUpdates(onDeliveryUpdate) {
+  const { connectionState, subscribe } = useSocket()
 
   useEffect(() => {
+    // Listen for backend Socket.IO events
     const unsubscribes = [
-      subscribe('deliveryAssigned', onDeliveryUpdate),
-      subscribe('deliveryUpdated', onDeliveryUpdate),
-      subscribe('deliveryRemoved', onDeliveryUpdate),
+      subscribe('delivery:created', onDeliveryUpdate),
+      subscribe('delivery:assigned', onDeliveryUpdate),
+      subscribe('delivery:status-updated', onDeliveryUpdate),
     ]
 
     return () => {

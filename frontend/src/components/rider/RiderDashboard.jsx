@@ -32,13 +32,16 @@ function RiderDashboard() {
   }, [riderId])
 
   const handleDeliveryUpdate = useCallback((updatedDelivery) => {
+    // Backend emits { delivery: {...} }
+    const delivery = updatedDelivery.delivery || updatedDelivery
     setDeliveries((prev) => {
-      const index = prev.findIndex((d) => d.id === updatedDelivery.id)
+      const id = delivery._id || delivery.id
+      const index = prev.findIndex((d) => (d._id || d.id) === id)
       if (index === -1) {
-        return [...prev, updatedDelivery]
+        return [...prev, delivery]
       }
       const updated = [...prev]
-      updated[index] = updatedDelivery
+      updated[index] = delivery
       return updated
     })
   }, [])
@@ -48,14 +51,10 @@ function RiderDashboard() {
   }, [])
 
   const handleRealtimeEvent = useCallback((payload) => {
-    if (payload.type === 'deliveryRemoved') {
-      handleDeliveryRemoved(payload.deliveryId)
-    } else {
-      handleDeliveryUpdate(payload)
-    }
-  }, [handleDeliveryUpdate, handleDeliveryRemoved])
+    handleDeliveryUpdate(payload)
+  }, [handleDeliveryUpdate])
 
-  const { connectionState } = useDeliveryUpdates(riderId, handleRealtimeEvent)
+  const { connectionState } = useDeliveryUpdates(handleRealtimeEvent)
 
   useEffect(() => {
     fetchDeliveries()

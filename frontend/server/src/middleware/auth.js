@@ -1,7 +1,12 @@
 import jwt from 'jsonwebtoken'
 import { getDb } from '../db/database.js'
+import logger from '../utils/logger.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'reflex-delivery-jwt-secret-2026'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  logger.fatal('JWT_SECRET environment variable is required')
+  process.exit(1)
+}
 
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization']

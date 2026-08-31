@@ -60,7 +60,7 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
 
       <div className="delivery-detail__card">
         <div className="delivery-detail__header">
-          <h2 className="delivery-detail__id">Delivery #{delivery.id}</h2>
+          <h2 className="delivery-detail__id">Delivery #{(delivery._id || delivery.id).slice(-6)}</h2>
           <StatusBadge status={delivery.status} />
         </div>
 
@@ -70,38 +70,26 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
             <p>{delivery.customerName}</p>
           </div>
           <div className="delivery-detail__field">
+            <label>Phone</label>
+            <p>{delivery.customerPhone}</p>
+          </div>
+          <div className="delivery-detail__field">
             <label>Address</label>
-            <p>{delivery.address}</p>
+            <p>{delivery.deliveryAddress}</p>
           </div>
           <div className="delivery-detail__field">
             <label>Item</label>
             <p>{delivery.itemDescription}</p>
           </div>
-          {delivery.customerId && (
-            <div className="delivery-detail__field">
-              <label>Customer ID</label>
-              <p>{delivery.customerId}</p>
-            </div>
-          )}
         </div>
 
         <div className="delivery-detail__actions">
           <StatusControls
-            deliveryId={delivery.id}
+            deliveryId={delivery._id || delivery.id}
             currentStatus={delivery.status}
             onStatusUpdated={handleStatusUpdated}
             onError={handleError}
-            onOpenPOD={() => setShowPOD(true)}
           />
-
-          {delivery.status === 'DELIVERED' && delivery.proofOfDelivery && (
-            <button
-              className="btn btn--secondary btn--proof"
-              onClick={() => setShowProof(true)}
-            >
-              View Proof
-            </button>
-          )}
         </div>
       </div>
 

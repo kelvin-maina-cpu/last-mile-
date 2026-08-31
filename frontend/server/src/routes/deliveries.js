@@ -18,7 +18,7 @@ router.get('/', authenticateToken, (req, res) => {
 
     res.json(parsed)
   } catch (error) {
-    console.error('[Deliveries] Get all error:', error)
+    req.log.error({ err: error }, 'Failed to fetch deliveries')
     res.status(500).json({ error: 'Failed to fetch deliveries' })
   }
 })
@@ -38,7 +38,7 @@ router.get('/:id', optionalAuth, (req, res) => {
       proof_of_delivery: delivery.proof_of_delivery ? JSON.parse(delivery.proof_of_delivery) : null,
     })
   } catch (error) {
-    console.error('[Deliveries] Get one error:', error)
+    req.log.error({ err: error }, 'Failed to fetch delivery')
     res.status(500).json({ error: 'Failed to fetch delivery' })
   }
 })
@@ -68,13 +68,17 @@ router.post('/', authenticateToken, (req, res) => {
       proof_of_delivery: null,
     })
   } catch (error) {
-    console.error('[Deliveries] Create error:', error)
+    req.log.error({ err: error }, 'Failed to create delivery')
     res.status(500).json({ error: 'Failed to create delivery' })
   }
 })
 
 // PATCH /api/deliveries/:id/status - Update delivery status
 router.patch('/:id/status', authenticateToken, (req, res) => {
+  // Only riders and dispatchers can update delivery status
+  if (!['rider', 'dispatcher'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Insufficient permissions to update delivery status' })
+  }
   try {
     const { status } = req.body
     const validStatuses = ['OPEN', 'ASSIGNED', 'PICKED_UP', 'DELIVERED']
@@ -99,13 +103,17 @@ router.patch('/:id/status', authenticateToken, (req, res) => {
       proof_of_delivery: updated.proof_of_delivery ? JSON.parse(updated.proof_of_delivery) : null,
     })
   } catch (error) {
-    console.error('[Deliveries] Update status error:', error)
+    req.log.error({ err: error }, 'Failed to update delivery status')
     res.status(500).json({ error: 'Failed to update delivery status' })
   }
 })
 
 // POST /api/deliveries/:id/assign - Assign rider to delivery
 router.post('/:id/assign', authenticateToken, (req, res) => {
+  // Only dispatchers can assign riders
+  if (req.user.role !== 'dispatcher') {
+    return res.status(403).json({ error: 'Only dispatchers can assign riders' })
+  }
   try {
     const { riderId } = req.body
 
@@ -134,7 +142,7 @@ router.post('/:id/assign', authenticateToken, (req, res) => {
       proof_of_delivery: updated.proof_of_delivery ? JSON.parse(updated.proof_of_delivery) : null,
     })
   } catch (error) {
-    console.error('[Deliveries] Assign error:', error)
+    req.log.error({ err: error }, 'Failed to assign rider')
     res.status(500).json({ error: 'Failed to assign rider' })
   }
 })
@@ -168,7 +176,7 @@ router.post('/:id/complete', authenticateToken, (req, res) => {
       proof_of_delivery: JSON.parse(updated.proof_of_delivery),
     })
   } catch (error) {
-    console.error('[Deliveries] Complete error:', error)
+    req.log.error({ err: error }, 'Failed to complete delivery')
     res.status(500).json({ error: 'Failed to complete delivery' })
   }
 })
@@ -177,6 +185,10 @@ export default router
 
 // DELETE /api/deliveries/:id - Delete a delivery
 router.delete('/:id', authenticateToken, (req, res) => {
+  // Only dispatchers can delete deliveries
+  if (req.user.role !== 'dispatcher') {
+    return res.status(403).json({ error: 'Only dispatchers can delete deliveries' })
+  }
   try {
     const db = getDb()
     const delivery = db.prepare('SELECT * FROM deliveries WHERE id = ?').get(req.params.id)
@@ -189,7 +201,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 
     res.json({ message: 'Delivery deleted successfully' })
   } catch (error) {
-    console.error('[Deliveries] Delete error:', error)
+    req.log.error({ err: error }, 'Failed to delete delivery')
     res.status(500).json({ error: 'Failed to delete delivery' })
   }
 })

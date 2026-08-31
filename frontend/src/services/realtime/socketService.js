@@ -1,104 +1,72 @@
-import { WS_URL, HAS_PRIMARY_BACKEND, FALLBACK_WS_URL } from '../../config/apiConfig'
+import { io } from 'socket.io-client'
+import { WS_URL } from '../../config/apiConfig'
 
 class SocketService {
   constructor() {
     this.socket = null
     this.listeners = new Map()
-    this.reconnectAttempts = 0
-    this.maxReconnectAttempts = 5
-    this.reconnectDelay = 1000
-    this.isConnecting = false
     this.connectionState = 'disconnected'
-    this.isUsingFallback = false
   }
 
-  connect(riderId) {
-    if (this.isConnecting || this.socket?.readyState === WebSocket.OPEN) {
+  connect() {
+    if (this.socket?.connected) {
       return
     }
 
-    this.isConnecting = true
     this.connectionState = 'connecting'
 
-    // Try primary WS first, then fallback
-    const primaryUrl = WS_URL
-    const fallbackUrl = FALLBACK_WS_URL
+    const url = WS_URL || 'http://localhost:3000'
 
-    if (primaryUrl) {
-      this._attemptConnect(riderId, primaryUrl, fallbackUrl)
-    } else {
-      // No primary configured — connect directly to fallback
-      this._attemptConnect(riderId, fallbackUrl, fallbackUrl)
-    }
-  }
+    this.socket = io(url, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    })
 
-  _attemptConnect(riderId, primaryWsUrl, fallbackWsUrl) {
-    try {
-      const url = `${primaryWsUrl}?riderId=${riderId}`
-      this.socket = new WebSocket(url)
+    this.socket.on('connect', () => {
+      this.connectionState = 'connected'
+      this._emit('connectionChange', { state: 'connected' })
+    })
 
-      this.socket.onopen = () => {
-        this.isConnecting = false
-        this.reconnectAttempts = 0
-        this.connectionState = 'connected'
-        if (this.isUsingFallback) {
-          console.log('[WS] Connected to fallback WebSocket server')
-        } else {
-          console.log('[WS] Connected to primary WebSocket server')
-        }
-        this._emit('connectionChange', { state: 'connected' })
-      }
+    this.socket.on('disconnect', (reason) => {
+      this.connectionState = 'disconnected'
+      this._emit('connectionChange', { state: 'disconnected' })
+    })
 
-      this.socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          this._emit(data.type, data.payload)
-        } catch (error) {
-          console.error('Failed to parse WebSocket message:', error)
-        }
-      }
-
-      this.socket.onclose = (event) => {
-        this.isConnecting = false
-        this.connectionState = 'disconnected'
-        this._emit('connectionChange', { state: 'disconnected' })
-
-        if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-          // If primary WS failed and we have a fallback, try it
-          if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
-            console.log('[WS] Primary WebSocket unavailable, trying fallback')
-            this.isUsingFallback = true
-            this.reconnectAttempts = 0
-            this._attemptConnect(riderId, fallbackWsUrl, null)
-            return
-          }
-          this._scheduleReconnect(riderId, fallbackWsUrl)
-        }
-      }
-
-      this.socket.onerror = (event) => {
-        console.warn(`[WS] Error connecting to ${this.isUsingFallback ? 'fallback' : 'primary'} WebSocket`)
-        this.isConnecting = false
-        this.connectionState = 'error'
-        this._emit('connectionChange', { state: 'error' })
-
-        // On error, if we have a fallback available, try it on close
-        if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
-          // The onclose handler will handle the fallback attempt
-        }
-      }
-    } catch (error) {
-      console.warn('[WS] WebSocket connection error:', error.message)
-      this.isConnecting = false
+    this.socket.on('connect_error', (error) => {
       this.connectionState = 'error'
       this._emit('connectionChange', { state: 'error' })
-    }
+    })
+
+    this.socket.on('reconnect_attempt', (attempt) => {
+      this.connectionState = 'reconnecting'
+      this._emit('connectionChange', { state: 'reconnecting', attempt })
+    })
+
+    this.socket.on('reconnect', () => {
+      this.connectionState = 'connected'
+      this._emit('connectionChange', { state: 'connected' })
+    })
+
+    // Listen for backend events and forward to our listeners
+    this.socket.on('delivery:created', (data) => {
+      this._emit('delivery:created', data)
+    })
+
+    this.socket.on('delivery:assigned', (data) => {
+      this._emit('delivery:assigned', data)
+    })
+
+    this.socket.on('delivery:status-updated', (data) => {
+      this._emit('delivery:status-updated', data)
+    })
   }
 
   disconnect() {
-    this.reconnectAttempts = this.maxReconnectAttempts
     if (this.socket) {
-      this.socket.close(1000, 'Client disconnecting')
+      this.socket.disconnect()
       this.socket = null
     }
     this.connectionState = 'disconnected'
@@ -129,26 +97,6 @@ class SocketService {
     if (callbacks) {
       callbacks.forEach((callback) => callback(data))
     }
-  }
-
-  _scheduleReconnect(riderId, fallbackWsUrl) {
-    this.reconnectAttempts++
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
-
-    this.connectionState = 'reconnecting'
-    this._emit('connectionChange', { state: 'reconnecting', attempt: this.reconnectAttempts })
-
-    setTimeout(() => {
-      // On reconnect, if not using fallback and primary was unavailable,
-      // try the fallback server
-      if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
-        this.isUsingFallback = true
-        this.reconnectAttempts = 0
-        this._attemptConnect(riderId, fallbackWsUrl, null)
-      } else {
-        this._attemptConnect(riderId, this.isUsingFallback ? fallbackWsUrl : WS_URL, fallbackWsUrl)
-      }
-    }, delay)
   }
 }
 
