@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { API_BASE_URL } from '../config/apiConfig'
+import { API_BASE_URL, USE_MOCK_AUTH } from '../config/apiConfig'
 
 const ROLES = [
   {
@@ -82,6 +82,10 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
+    if (USE_MOCK_AUTH) {
+      setError('Google login is not available in demo mode. Use a role button above.')
+      return
+    }
     // Fallback to localhost:3001 only for local dev; production uses VITE_API_URL
     const apiUrl = API_BASE_URL || 'http://localhost:3001/api'
     window.location.href = `${apiUrl}/auth/google`

@@ -100,9 +100,10 @@ export async function apiFetch(endpoint, options = {}) {
   const baseUrl = API_BASE_URL
 
   // No backend at all (production without VITE_API_URL)
+  // Throw so callers can fall back to mock data
   if (!baseUrl) {
-    console.warn('[API] No backend configured (VITE_API_URL not set)')
-    throw new Error('No backend API URL configured. Set VITE_API_URL.')
+    console.warn('[API] No backend configured (VITE_API_URL not set) — caller should use mock data')
+    throw new Error('No backend API URL configured. Caller should fall back to mock data.')
   }
 
   // Relative URL — go through Vite proxy (local dev, no primary backend)
@@ -162,6 +163,7 @@ async function tryFallback(url, options) {
     return response
   } catch (err) {
     console.warn('[API] Fallback server also unavailable:', err.message)
+    console.warn('[API] Caller should fall back to mock data')
     throw new Error('Both primary and fallback servers are unavailable')
   }
 }
