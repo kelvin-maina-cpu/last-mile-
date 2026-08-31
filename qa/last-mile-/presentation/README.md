@@ -1,3 +1,0 @@
-# Presentation
-
-Owner: Presentation track
