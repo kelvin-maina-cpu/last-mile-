@@ -63,7 +63,7 @@ function LandingPage() {
               navigate('/login')
               return
             }
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
             window.location.href = `${apiUrl}/auth/google`
           }}>
             <span className="landing__google-icon">G</span>

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 // ============================================================
 // TEMPORARY MOCK DATA MODE (Mary, Rider frontend) — see mockDeliveries.js

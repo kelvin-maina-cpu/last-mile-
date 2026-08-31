@@ -81,7 +81,7 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
     if (useMock) {

@@ -1,4 +1,4 @@
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 class SocketService {
