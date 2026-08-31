@@ -1,5 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const requestId = require('./middleware/requestId');
+const logger = require('./utils/logger');
+const httpsOnly = require('./middleware/httpsOnly');
 const healthRoutes = require('./routes/health');
 const deliveryRoutes = require('./routes/deliveries');
 const riderRoutes = require('./routes/riders');
@@ -7,9 +12,42 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// --- Middleware ---
-app.use(cors());
-app.use(express.json());
+// --- Security Middleware ---
+app.use(httpsOnly);
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later', code: 'RATE_LIMITED' },
+}));
+
+// --- CORS ---
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
+}
+app.use(cors({
+  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  credentials: true,
+}));
+
+// --- Body parsing with size limit ---
+app.use(express.json({ limit: '1mb' }));
+
+// --- Request ID + child logger ---
+app.use(requestId);
+
+// --- Request logging ---
+app.use((req, res, next) => {
+  if (req.path !== '/api/health') {
+    req.log.info({ method: req.method, path: req.path }, 'API request');
+  }
+  next();
+});
 
 // --- Routes ---
 app.use('/api/health', healthRoutes);

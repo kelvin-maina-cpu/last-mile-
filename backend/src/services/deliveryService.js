@@ -104,7 +104,7 @@ async function assignRider(deliveryId, riderId) {
 async function updateStatus(deliveryId, newStatus) {
   validateId(deliveryId, 'delivery');
 
-  const validStatusValues = ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'];
+  const validStatusValues = ['PICKED_UP', 'DELIVERED'];
   if (!validStatusValues.includes(newStatus)) {
     throw new ValidationError(
       `Invalid status value. Must be one of: ${validStatusValues.join(', ')}`,

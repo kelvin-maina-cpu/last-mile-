@@ -15,6 +15,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
+const logger = require('../utils/logger');
 const Rider = require('../models/Rider');
 const Delivery = require('../models/Delivery');
 
@@ -91,26 +92,26 @@ function buildDeliveries(riderDocs) {
 async function seed() {
   await connectDB();
 
-  console.log('Clearing existing riders and deliveries...');
+  logger.info('Clearing existing riders and deliveries...');
   await Promise.all([Rider.deleteMany({}), Delivery.deleteMany({})]);
 
-  console.log(`Inserting ${riders.length} riders...`);
+  logger.info({ count: riders.length }, 'Inserting riders');
   const riderDocs = await Rider.insertMany(riders);
-  riderDocs.forEach((r) => console.log(`  - ${r.name} (${r._id}) available=${r.available}`));
+  riderDocs.forEach((r) => logger.info({ name: r.name, id: r._id, available: r.available }, 'Rider seeded'));
 
   const deliveries = buildDeliveries(riderDocs);
-  console.log(`Inserting ${deliveries.length} deliveries...`);
+  logger.info({ count: deliveries.length }, 'Inserting deliveries');
   const deliveryDocs = await Delivery.insertMany(deliveries);
   deliveryDocs.forEach((d) =>
-    console.log(`  - ${d.itemDescription} -> ${d.status} (${d._id})`)
+    logger.info({ item: d.itemDescription, status: d.status, id: d._id }, 'Delivery seeded')
   );
 
-  console.log('Seed complete.');
+  logger.info('Seed complete');
   await mongoose.connection.close();
   process.exit(0);
 }
 
 seed().catch((error) => {
-  console.error('Seed failed:', error);
+  logger.error({ err: error }, 'Seed failed');
   process.exit(1);
 });

@@ -1,8 +1,9 @@
 const { AppError, ValidationError, InvalidIdError } = require('../utils/errors');
 
 const errorHandler = (err, req, res, next) => {
-  // Log the error for debugging
-  console.error('Error:', err.message);
+  // Use the request-scoped logger so requestId is automatically included
+  const log = req.log || require('../utils/logger');
+  log.error({ err, method: req.method, path: req.path }, 'Request error');
 
   // If it's our custom AppError, use its properties
   if (err instanceof AppError) {
