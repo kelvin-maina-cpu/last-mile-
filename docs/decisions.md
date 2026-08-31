@@ -134,6 +134,7 @@ dotenv        — Environment variable management
 ```
 jest          — Test runner
 supertest     — HTTP endpoint testing
+socket.io-client — Socket.IO client for event testing
 nodemon       — Auto-restart on file changes (dev only)
 ```
 
@@ -172,9 +173,8 @@ backend/
 │   └── utils/
 │       └── errors.js          # Custom error classes
 ├── tests/
-│   ├── delivery.test.js       # Delivery endpoint tests
-│   ├── rider.test.js          # Rider endpoint tests
-│   └── stateMachine.test.js   # State transition unit tests
+│   ├── api.test.js            # API endpoint tests (49 tests)
+│   └── realtime.test.js       # Socket.IO event tests (4 tests)
 └── README.md
 ```
 
