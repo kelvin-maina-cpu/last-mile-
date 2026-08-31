@@ -4,8 +4,23 @@ import { useNavigate } from 'react-router-dom'
 const AuthContext = createContext(null)
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+const EXPLICIT_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
+const EXPLICIT_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+
+// Auto-detect: if deployed on a real domain and VITE_API_URL is not configured,
+// we can't reach a localhost backend — enable mock mode automatically.
+const isDeployedHost = typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1' &&
+  !window.location.hostname.startsWith('192.168.')
+const apiIsLocalhost = API_BASE_URL.includes('localhost')
+const AUTO_MOCK = isDeployedHost && apiIsLocalhost
+
+const USE_MOCK_AUTH = EXPLICIT_MOCK_AUTH || EXPLICIT_MOCK_DATA || AUTO_MOCK
+const USE_MOCK_DATA = EXPLICIT_MOCK_DATA || AUTO_MOCK
+
+// Expose for UI banner
+export const IS_DEMO_MODE = USE_MOCK_AUTH
 
 // Mock users for demo mode
 const MOCK_USERS = [
