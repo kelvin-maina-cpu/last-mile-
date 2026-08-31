@@ -1,8 +1,0 @@
-node_modules/
-frontend/node_modules/
-.env
-.env.*
-frontend/.env
-!.env.example
-*.log
-.DS_Store
