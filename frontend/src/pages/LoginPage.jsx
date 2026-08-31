@@ -81,10 +81,11 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-    const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+    const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
+    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
-    if (useMock) {
+    if (useMockAuth || useMockData) {
       // Mock Google login — use a demo user
       const mockData = {
         token: 'mock-jwt-token-for-demo',

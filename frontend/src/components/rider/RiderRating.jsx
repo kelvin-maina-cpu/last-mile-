@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 const MOCK_RATING_DATA = {
@@ -37,7 +38,7 @@ function RiderRating() {
     }
 
     const fetchRating = async () => {
-      if (USE_MOCK_DATA) {
+      if (USE_MOCK_AUTH || USE_MOCK_DATA) {
         await new Promise((r) => setTimeout(r, 300))
         setRatingData(MOCK_RATING_DATA)
         setLoading(false)
@@ -56,7 +57,13 @@ function RiderRating() {
         const data = await response.json()
         setRatingData(data)
       } catch (err) {
-        setError(err.message)
+        // Auto-fallback: if backend is unreachable, use mock rating data
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          console.warn('[Rating] Backend unreachable — using mock rating data.')
+          setRatingData(MOCK_RATING_DATA)
+        } else {
+          setError(err.message)
+        }
       } finally {
         setLoading(false)
       }
