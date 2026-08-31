@@ -14,6 +14,7 @@ dotenv.config()
 
 const PORT = process.env.PORT || 3001
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+const VERCEL_URL = process.env.VERCEL_URL || 'https://last-mile-m4nv.vercel.app'
 const ADDITIONAL_ORIGINS = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []
 
 // Initialize database
@@ -24,9 +25,9 @@ console.log('[Server] Database initialized')
 // Create Express app
 const app = express()
 
-// Middleware
+// Middleware — CORS allows the deployed Vercel frontend and local dev
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000', ...ADDITIONAL_ORIGINS],
+  origin: [FRONTEND_URL, VERCEL_URL, 'http://localhost:5173', 'http://localhost:3000', ...ADDITIONAL_ORIGINS],
   credentials: true,
 }))
 app.use(express.json({ limit: '10mb' }))

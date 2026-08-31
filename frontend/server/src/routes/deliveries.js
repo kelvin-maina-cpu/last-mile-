@@ -58,8 +58,8 @@ router.post('/', authenticateToken, (req, res) => {
 
     db.prepare(`
       INSERT INTO deliveries (id, customer_name, customer_phone, customer_id, address, item_description, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'OPEN')
-    `).run(id, customerName, customerPhone, customerId, address, itemDescription)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, customerName, customerPhone, customerId, address, itemDescription, 'OPEN')
 
     const delivery = db.prepare('SELECT * FROM deliveries WHERE id = ?').get(id)
 
@@ -174,3 +174,22 @@ router.post('/:id/complete', authenticateToken, (req, res) => {
 })
 
 export default router
+
+// DELETE /api/deliveries/:id - Delete a delivery
+router.delete('/:id', authenticateToken, (req, res) => {
+  try {
+    const db = getDb()
+    const delivery = db.prepare('SELECT * FROM deliveries WHERE id = ?').get(req.params.id)
+
+    if (!delivery) {
+      return res.status(404).json({ error: 'Delivery not found' })
+    }
+
+    db.prepare('DELETE FROM deliveries WHERE id = ?').run(req.params.id)
+
+    res.json({ message: 'Delivery deleted successfully' })
+  } catch (error) {
+    console.error('[Deliveries] Delete error:', error)
+    res.status(500).json({ error: 'Failed to delete delivery' })
+  }
+})

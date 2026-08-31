@@ -1,6 +1,4 @@
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
-const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+import { WS_URL, HAS_PRIMARY_BACKEND, FALLBACK_WS_URL } from '../../config/apiConfig'
 
 class SocketService {
   constructor() {
@@ -11,6 +9,7 @@ class SocketService {
     this.reconnectDelay = 1000
     this.isConnecting = false
     this.connectionState = 'disconnected'
+    this.isUsingFallback = false
   }
 
   connect(riderId) {
@@ -18,23 +17,35 @@ class SocketService {
       return
     }
 
-    // In mock mode, skip WebSocket — mark as connected for UI purposes
-    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
-      this.connectionState = 'connected'
-      this._emit('connectionChange', { state: 'connected' })
-      return
-    }
-
     this.isConnecting = true
     this.connectionState = 'connecting'
 
+    // Try primary WS first, then fallback
+    const primaryUrl = WS_URL
+    const fallbackUrl = FALLBACK_WS_URL
+
+    if (primaryUrl) {
+      this._attemptConnect(riderId, primaryUrl, fallbackUrl)
+    } else {
+      // No primary configured — connect directly to fallback
+      this._attemptConnect(riderId, fallbackUrl, fallbackUrl)
+    }
+  }
+
+  _attemptConnect(riderId, primaryWsUrl, fallbackWsUrl) {
     try {
-      this.socket = new WebSocket(`${WS_URL}?riderId=${riderId}`)
+      const url = `${primaryWsUrl}?riderId=${riderId}`
+      this.socket = new WebSocket(url)
 
       this.socket.onopen = () => {
         this.isConnecting = false
         this.reconnectAttempts = 0
         this.connectionState = 'connected'
+        if (this.isUsingFallback) {
+          console.log('[WS] Connected to fallback WebSocket server')
+        } else {
+          console.log('[WS] Connected to primary WebSocket server')
+        }
         this._emit('connectionChange', { state: 'connected' })
       }
 
@@ -53,16 +64,31 @@ class SocketService {
         this._emit('connectionChange', { state: 'disconnected' })
 
         if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-          this._scheduleReconnect(riderId)
+          // If primary WS failed and we have a fallback, try it
+          if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
+            console.log('[WS] Primary WebSocket unavailable, trying fallback')
+            this.isUsingFallback = true
+            this.reconnectAttempts = 0
+            this._attemptConnect(riderId, fallbackWsUrl, null)
+            return
+          }
+          this._scheduleReconnect(riderId, fallbackWsUrl)
         }
       }
 
-      this.socket.onerror = () => {
+      this.socket.onerror = (event) => {
+        console.warn(`[WS] Error connecting to ${this.isUsingFallback ? 'fallback' : 'primary'} WebSocket`)
         this.isConnecting = false
         this.connectionState = 'error'
         this._emit('connectionChange', { state: 'error' })
+
+        // On error, if we have a fallback available, try it on close
+        if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
+          // The onclose handler will handle the fallback attempt
+        }
       }
     } catch (error) {
+      console.warn('[WS] WebSocket connection error:', error.message)
       this.isConnecting = false
       this.connectionState = 'error'
       this._emit('connectionChange', { state: 'error' })
@@ -105,15 +131,23 @@ class SocketService {
     }
   }
 
-  _scheduleReconnect(riderId) {
+  _scheduleReconnect(riderId, fallbackWsUrl) {
     this.reconnectAttempts++
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
-    
+
     this.connectionState = 'reconnecting'
     this._emit('connectionChange', { state: 'reconnecting', attempt: this.reconnectAttempts })
 
     setTimeout(() => {
-      this.connect(riderId)
+      // On reconnect, if not using fallback and primary was unavailable,
+      // try the fallback server
+      if (!this.isUsingFallback && fallbackWsUrl && HAS_PRIMARY_BACKEND) {
+        this.isUsingFallback = true
+        this.reconnectAttempts = 0
+        this._attemptConnect(riderId, fallbackWsUrl, null)
+      } else {
+        this._attemptConnect(riderId, this.isUsingFallback ? fallbackWsUrl : WS_URL, fallbackWsUrl)
+      }
     }, delay)
   }
 }
