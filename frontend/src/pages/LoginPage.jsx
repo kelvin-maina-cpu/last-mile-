@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { IS_DEMO_MODE } from '../context/AuthContext'
+import { API_BASE_URL } from '../config/apiConfig'
 
 const ROLES = [
   {
@@ -82,18 +82,8 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    if (IS_DEMO_MODE) {
-      // Mock Google login — use a demo user
-      const mockData = {
-        token: 'mock-jwt-token-for-demo',
-        user: { id: 'user-google', email: 'user@gmail.com', name: 'Google User', role: 'dispatcher' },
-      }
-      loginWithGoogle(mockData)
-      navigate('/dispatcher')
-      return
-    }
-
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+    // Fallback to localhost:3001 only for local dev; production uses VITE_API_URL
+    const apiUrl = API_BASE_URL || 'http://localhost:3001/api'
     window.location.href = `${apiUrl}/auth/google`
   }
 

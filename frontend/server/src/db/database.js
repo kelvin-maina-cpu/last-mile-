@@ -92,10 +92,10 @@ function executeQuery(sql, params, mode) {
       customer_id: params[3],
       address: params[4],
       item_description: params[5],
-      status: params[6],
-      rider_id: params[7],
-      proof_of_delivery: params[8],
-      created_at: params[9] || new Date().toISOString(),
+      status: params[6] || 'OPEN',
+      rider_id: params[7] || null,
+      proof_of_delivery: params[8] || null,
+      created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
     store.deliveries.push(delivery)
@@ -279,6 +279,25 @@ function executeQuery(sql, params, mode) {
       }))
   }
 
+  // DELETE operations
+  if (normalizedSql.startsWith('delete from deliveries where id = ?')) {
+    const index = store.deliveries.findIndex(d => d.id === params[0])
+    if (index !== -1) {
+      store.deliveries.splice(index, 1)
+      return { changes: 1 }
+    }
+    return { changes: 0 }
+  }
+
+  if (normalizedSql.startsWith('delete from users where id = ?')) {
+    const index = store.users.findIndex(u => u.id === params[0])
+    if (index !== -1) {
+      store.users.splice(index, 1)
+      return { changes: 1 }
+    }
+    return { changes: 0 }
+  }
+
   console.warn('[DB] Unhandled query:', normalizedSql.substring(0, 100))
   return mode === 'all' ? [] : undefined
 }
@@ -380,3 +399,5 @@ export function initializeDatabase() {
   console.log('[DB] Seed data loaded successfully')
   console.log(`[DB] ${store.users.length} users, ${store.deliveries.length} deliveries, ${store.riderRatings.length} ratings`)
 }
+
+
