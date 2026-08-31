@@ -1,15 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import DeliveryCard from '../delivery/DeliveryCard'
 import ConnectionIndicator from './ConnectionIndicator'
+import RiderRating from './RiderRating'
 import { deliveryService, ApiError } from '../../services/api/deliveryService'
 import { useDeliveryUpdates } from '../../hooks/useSocket'
 
-function RiderDashboard({ riderId }) {
+function RiderDashboard() {
+  const { user, riderProfile } = useAuth()
+  const riderId = user?.id
   const [deliveries, setDeliveries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetchDeliveries = useCallback(async () => {
+    if (!riderId) return
     try {
       setLoading(true)
       setError(null)
@@ -62,7 +67,15 @@ function RiderDashboard({ riderId }) {
   return (
     <div className="rider-dashboard">
       <header className="rider-dashboard__header">
-        <h1>My Deliveries</h1>
+        <div>
+          <h1>My Deliveries</h1>
+          {user && (
+            <p className="rider-dashboard__rider-info">
+              {user.name} · {riderProfile?.vehicle_type || 'Motorcycle'}
+              {riderProfile?.phone && ` · ${riderProfile.phone}`}
+            </p>
+          )}
+        </div>
         <ConnectionIndicator state={connectionState} />
       </header>
 
@@ -76,38 +89,46 @@ function RiderDashboard({ riderId }) {
         </div>
       )}
 
-      {loading ? (
-        <div className="loading-state">
-          <div className="loading-state__spinner" />
-          <p>Loading deliveries...</p>
-        </div>
-      ) : (
-        <>
-          <section className="rider-dashboard__section">
-            <h2>Active ({activeDeliveries.length})</h2>
-            {activeDeliveries.length === 0 ? (
-              <p className="empty-state">No active deliveries.</p>
-            ) : (
-              <div className="delivery-grid">
-                {activeDeliveries.map((delivery) => (
-                  <DeliveryCard key={delivery.id} delivery={delivery} />
-                ))}
-              </div>
-            )}
-          </section>
+      <div className="rider-dashboard__grid">
+        <div className="rider-dashboard__main">
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-state__spinner" />
+              <p>Loading deliveries...</p>
+            </div>
+          ) : (
+            <>
+              <section className="rider-dashboard__section">
+                <h2>Active ({activeDeliveries.length})</h2>
+                {activeDeliveries.length === 0 ? (
+                  <p className="empty-state">No active deliveries.</p>
+                ) : (
+                  <div className="delivery-grid">
+                    {activeDeliveries.map((delivery) => (
+                      <DeliveryCard key={delivery.id} delivery={delivery} />
+                    ))}
+                  </div>
+                )}
+              </section>
 
-          {completedDeliveries.length > 0 && (
-            <section className="rider-dashboard__section">
-              <h2>Completed ({completedDeliveries.length})</h2>
-              <div className="delivery-grid">
-                {completedDeliveries.map((delivery) => (
-                  <DeliveryCard key={delivery.id} delivery={delivery} />
-                ))}
-              </div>
-            </section>
+              {completedDeliveries.length > 0 && (
+                <section className="rider-dashboard__section">
+                  <h2>Completed ({completedDeliveries.length})</h2>
+                  <div className="delivery-grid">
+                    {completedDeliveries.map((delivery) => (
+                      <DeliveryCard key={delivery.id} delivery={delivery} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+
+        <aside className="rider-dashboard__sidebar">
+          <RiderRating />
+        </aside>
+      </div>
     </div>
   )
 }

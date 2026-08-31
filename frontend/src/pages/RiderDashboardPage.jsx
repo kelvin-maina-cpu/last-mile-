@@ -1,9 +1,14 @@
+import { useAuth } from '../context/AuthContext'
 import RiderDashboard from '../components/rider/RiderDashboard'
 
-const CURRENT_RIDER_ID = 'rider-001'
-
 function RiderDashboardPage() {
-  return <RiderDashboard riderId={CURRENT_RIDER_ID} />
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) {
+    return null
+  }
+
+  return <RiderDashboard />
 }
 
 export default RiderDashboardPage

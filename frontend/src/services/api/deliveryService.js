@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 // ============================================================
 // TEMPORARY MOCK DATA MODE (Mary, Rider frontend) — see mockDeliveries.js
@@ -17,9 +17,11 @@ class DeliveryService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`
+    const token = localStorage.getItem('reflex_token')
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
@@ -52,10 +54,11 @@ class DeliveryService {
       return createMockDelivery(deliveryData)
     }
 
-    return this.request('/deliveries', {
+    const response = await this.request('/deliveries', {
       method: 'POST',
       body: JSON.stringify(deliveryData),
     })
+    return response.delivery
   }
 
   // ============================================================
@@ -66,7 +69,8 @@ class DeliveryService {
       return getMockDeliveries()
     }
 
-    return this.request('/deliveries')
+    const response = await this.request('/deliveries')
+    return response.deliveries
   }
 
   // ============================================================
@@ -77,7 +81,8 @@ class DeliveryService {
       return getMockRiders()
     }
 
-    return this.request('/riders')
+    const response = await this.request('/riders')
+    return response.riders
   }
 
   // ============================================================
@@ -88,10 +93,11 @@ class DeliveryService {
       return assignMockRider(deliveryId, riderId)
     }
 
-    return this.request(`/deliveries/${deliveryId}/assign`, {
-      method: 'POST',
+    const response = await this.request(`/deliveries/${deliveryId}/assign`, {
+      method: 'PATCH',
       body: JSON.stringify({ riderId }),
     })
+    return response.delivery
   }
 
   // ============================================================
@@ -130,7 +136,8 @@ class DeliveryService {
     }
 
     try {
-      return await this.request(`/deliveries/${deliveryId}`)
+      const response = await this.request(`/deliveries/${deliveryId}`)
+      return response.delivery
     } catch (error) {
       if (import.meta.env.DEV && error instanceof ApiError && error.status === 0) {
         console.warn('[mock] Backend unreachable — serving mock delivery. Start the backend or set VITE_USE_MOCK_DATA=false to see real errors instead.')
@@ -156,10 +163,11 @@ class DeliveryService {
       return updated
     }
 
-    return this.request(`/deliveries/${deliveryId}/complete`, {
+    const response = await this.request(`/deliveries/${deliveryId}/complete`, {
       method: 'POST',
       body: JSON.stringify(podData),
     })
+    return response.delivery
   }
 
   // ============================================================
@@ -176,10 +184,11 @@ class DeliveryService {
     }
 
     try {
-      return await this.request(`/deliveries/${deliveryId}/status`, {
+      const response = await this.request(`/deliveries/${deliveryId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       })
+      return response.delivery
     } catch (error) {
       if (import.meta.env.DEV && error instanceof ApiError && error.status === 0) {
         console.warn('[mock] Backend unreachable — applying status update to mock data. Start the backend or set VITE_USE_MOCK_DATA=false to see real errors instead.')

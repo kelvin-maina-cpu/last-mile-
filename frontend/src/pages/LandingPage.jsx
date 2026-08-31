@@ -1,7 +1,16 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function LandingPage() {
   const navigate = useNavigate()
+  const [isLight, setIsLight] = useState(() => {
+    return localStorage.getItem('reflex_theme') === 'light'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark')
+    localStorage.setItem('reflex_theme', isLight ? 'light' : 'dark')
+  }, [isLight])
 
   const handleLogin = () => {
     navigate('/login')
@@ -19,9 +28,19 @@ function LandingPage() {
           <span className="landing__logo-icon">&#9889;</span>
           <span className="landing__logo-text">REFLEX</span>
         </div>
-        <button className="landing__login-link" onClick={handleLogin}>
-          LOGIN
-        </button>
+        <div className="landing__header-right">
+          <button
+            className="theme-toggle"
+            onClick={() => setIsLight(!isLight)}
+            aria-label="Toggle light/dark mode"
+            title={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {isLight ? '🌙' : '☀️'}
+          </button>
+          <button className="landing__login-link" onClick={handleLogin}>
+            LOGIN
+          </button>
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -38,7 +57,15 @@ function LandingPage() {
           <button className="landing__btn landing__btn--secondary" onClick={handleLogin}>
             LOGIN
           </button>
-          <button className="landing__btn landing__btn--google" onClick={handleLogin}>
+          <button className="landing__btn landing__btn--google" onClick={() => {
+            const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+            if (useMock) {
+              navigate('/login')
+              return
+            }
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+            window.location.href = `${apiUrl}/auth/google`
+          }}>
             <span className="landing__google-icon">G</span>
             CONTINUE WITH GOOGLE
           </button>
