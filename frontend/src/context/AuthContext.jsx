@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 // Mock users for demo mode
@@ -51,7 +52,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = useCallback(async (email, password) => {
-    if (USE_MOCK_DATA) {
+    // Explicit mock mode: always use mock auth without contacting backend
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       const data = mockLogin(email, password)
       localStorage.setItem('reflex_token', data.token)
       localStorage.setItem('reflex_user', JSON.stringify(data.user))
@@ -64,34 +66,52 @@ export function AuthProvider({ children }) {
       return data
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Login failed' }))
-      throw new Error(error.error || 'Login failed')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Login failed' }))
+        throw new Error(error.error || 'Login failed')
+      }
+
+      const data = await response.json()
+
+      localStorage.setItem('reflex_token', data.token)
+      localStorage.setItem('reflex_user', JSON.stringify(data.user))
+      if (data.riderProfile) {
+        localStorage.setItem('reflex_rider_profile', JSON.stringify(data.riderProfile))
+      }
+
+      setToken(data.token)
+      setUser(data.user)
+      setRiderProfile(data.riderProfile || null)
+
+      return data
+    } catch (err) {
+      // Auto-fallback: if backend is unreachable (network error), fall back to mock auth
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        console.warn('[Auth] Backend unreachable — falling back to mock auth. Start the backend or set VITE_USE_MOCK_AUTH=true.')
+        const data = mockLogin(email, password)
+        localStorage.setItem('reflex_token', data.token)
+        localStorage.setItem('reflex_user', JSON.stringify(data.user))
+        if (data.riderProfile) {
+          localStorage.setItem('reflex_rider_profile', JSON.stringify(data.riderProfile))
+        }
+        setToken(data.token)
+        setUser(data.user)
+        setRiderProfile(data.riderProfile || null)
+        return data
+      }
+      throw err
     }
-
-    const data = await response.json()
-
-    localStorage.setItem('reflex_token', data.token)
-    localStorage.setItem('reflex_user', JSON.stringify(data.user))
-    if (data.riderProfile) {
-      localStorage.setItem('reflex_rider_profile', JSON.stringify(data.riderProfile))
-    }
-
-    setToken(data.token)
-    setUser(data.user)
-    setRiderProfile(data.riderProfile || null)
-
-    return data
   }, [])
 
   const register = useCallback(async (email, password, name, role, phone) => {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       const newUser = { id: 'user-' + Date.now(), email, name, role }
       MOCK_USERS.push(newUser)
       const riderProfile = role === 'rider' ? { id: 'rider-' + Date.now(), name, vehicle_type: 'Motorcycle', phone } : null

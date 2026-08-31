@@ -14,6 +14,7 @@ dotenv.config()
 
 const PORT = process.env.PORT || 3001
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+const ADDITIONAL_ORIGINS = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []
 
 // Initialize database
 console.log('[Server] Initializing database...')
@@ -25,7 +26,7 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000', ...ADDITIONAL_ORIGINS],
   credentials: true,
 }))
 app.use(express.json({ limit: '10mb' }))

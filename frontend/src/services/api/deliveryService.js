@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 // ============================================================
 // TEMPORARY MOCK DATA MODE (Mary, Rider frontend) — see mockDeliveries.js
@@ -8,6 +8,7 @@ import { getMockDeliveries, findMockDelivery, updateMockDeliveryStatus, createMo
 // Turn mock mode on/off with VITE_USE_MOCK_DATA=true|false in
 // frontend/.env (see .env.example). When explicitly enabled, mock
 // data is used unconditionally — no real requests are attempted.
+const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 class DeliveryService {
@@ -50,7 +51,7 @@ class DeliveryService {
   // RETAILER: Create a new delivery
   // ============================================================
   async createDelivery(deliveryData) {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       return createMockDelivery(deliveryData)
     }
 
@@ -65,7 +66,7 @@ class DeliveryService {
   // DISPATCHER: Get all deliveries
   // ============================================================
   async getDeliveries() {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       return getMockDeliveries()
     }
 
@@ -77,7 +78,7 @@ class DeliveryService {
   // DISPATCHER: Get available riders
   // ============================================================
   async getAvailableRiders() {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       return getMockRiders()
     }
 
@@ -89,7 +90,7 @@ class DeliveryService {
   // DISPATCHER: Assign a rider to a delivery
   // ============================================================
   async assignRider(deliveryId, riderId) {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       return assignMockRider(deliveryId, riderId)
     }
 
@@ -105,7 +106,7 @@ class DeliveryService {
   // ============================================================
   async getAssignedDeliveries(riderId) {
     // MOCK MODE: explicit override — always serve mock data.
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       return getMockDeliveries(riderId)
     }
 
@@ -127,7 +128,7 @@ class DeliveryService {
 
   async getDeliveryById(deliveryId) {
     // MOCK MODE: explicit override — always serve mock data.
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       const delivery = await findMockDelivery(deliveryId)
       if (!delivery) {
         throw new ApiError('Delivery not found', 404)
@@ -155,7 +156,7 @@ class DeliveryService {
   // RIDER: Complete delivery with Proof of Delivery
   // ============================================================
   async completeDeliveryWithPOD(deliveryId, podData) {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       const updated = await completeMockDeliveryWithPOD(deliveryId, podData)
       if (!updated) {
         throw new ApiError('Delivery not found', 404)
@@ -175,7 +176,7 @@ class DeliveryService {
   // ============================================================
   async updateDeliveryStatus(deliveryId, status) {
     // MOCK MODE: explicit override — always serve mock data.
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       const updated = await updateMockDeliveryStatus(deliveryId, status)
       if (!updated) {
         throw new ApiError('Delivery not found', 404)

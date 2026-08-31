@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 const WELCOME_MESSAGE = {
@@ -65,7 +66,7 @@ function Chatbot() {
     setInput('')
     setLoading(true)
 
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500))
       const reply = getMockResponse(text.trim())
@@ -88,10 +89,16 @@ function Chatbot() {
       const data = await response.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
     } catch (error) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: "Sorry, I'm having trouble connecting. Please try again in a moment.",
-      }])
+      // Auto-fallback to mock responses when backend is unreachable
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const reply = getMockResponse(text.trim())
+        setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: "Sorry, I'm having trouble connecting. Please try again in a moment.",
+        }])
+      }
     } finally {
       setLoading(false)
     }

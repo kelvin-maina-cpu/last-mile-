@@ -1,4 +1,5 @@
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000'
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 class SocketService {
@@ -18,7 +19,7 @@ class SocketService {
     }
 
     // In mock mode, skip WebSocket — mark as connected for UI purposes
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH || USE_MOCK_DATA) {
       this.connectionState = 'connected'
       this._emit('connectionChange', { state: 'connected' })
       return
