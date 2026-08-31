@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IS_DEMO_MODE } from '../context/AuthContext'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -58,9 +59,7 @@ function LandingPage() {
             LOGIN
           </button>
           <button className="landing__btn landing__btn--google" onClick={() => {
-            const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-            const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true'
-            if (useMockAuth || useMockData) {
+            if (IS_DEMO_MODE) {
               navigate('/login')
               return
             }

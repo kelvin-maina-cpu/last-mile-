@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { IS_DEMO_MODE } from '../context/AuthContext'
 
 const ROLES = [
   {
@@ -81,11 +82,7 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-    const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true'
-
-    if (useMockAuth || useMockData) {
+    if (IS_DEMO_MODE) {
       // Mock Google login — use a demo user
       const mockData = {
         token: 'mock-jwt-token-for-demo',
@@ -96,6 +93,7 @@ function LoginPage() {
       return
     }
 
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
     window.location.href = `${apiUrl}/auth/google`
   }
 
