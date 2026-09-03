@@ -7,9 +7,23 @@ function parseCsv(value) {
     .filter(Boolean);
 }
 
+function normalizeOrigin(origin) {
+  if (!origin || typeof origin !== 'string') return null;
+  const trimmed = origin.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return url.origin;
+  } catch {
+    return trimmed.replace(/\/+$/, '');
+  }
+}
+
 function addOrigin(list, origin) {
-  if (origin && !list.includes(origin)) {
-    list.push(origin);
+  const normalized = normalizeOrigin(origin);
+  if (normalized && !list.includes(normalized)) {
+    list.push(normalized);
   }
 }
 

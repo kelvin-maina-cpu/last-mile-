@@ -8,6 +8,11 @@ const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 3000;
 const allowedOrigins = buildAllowedOrigins();
+const normalizedAllowedOrigins = new Set(
+  allowedOrigins
+    .filter((origin) => typeof origin === 'string' && origin.trim())
+    .map((origin) => origin.replace(/\/+$/, ''))
+);
 
 // Create HTTP server from Express app
 const server = http.createServer(app);
@@ -16,7 +21,19 @@ const server = http.createServer(app);
 // Initialize Socket.IO with restricted CORS
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+    origin: (origin, callback) => {
+      // Non-browser clients may not send an Origin header.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      if (normalizedAllowedOrigins.has(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Socket origin not allowed by CORS'), false);
+    },
     methods: ['GET', 'POST', 'PATCH'],
   },
 });
@@ -43,7 +60,11 @@ const start = async () => {
   try {
     await connectDB();
     server.listen(PORT, '0.0.0.0', () => {
-      logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Reflex backend started');
+      logger.info({
+        port: PORT,
+        env: process.env.NODE_ENV || 'development',
+        allowedOrigins: Array.from(normalizedAllowedOrigins),
+      }, 'Reflex backend started');
     });
   } catch (error) {
     logger.fatal({ err: error }, 'Failed to start backend');
