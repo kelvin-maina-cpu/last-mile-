@@ -46,7 +46,7 @@ function GoogleCallback() {
     const data = params.get('data')
     if (data) {
       try {
-        const userData = JSON.parse(decodeURIComponent(data))
+        const userData = JSON.parse(data)
         loginWithGoogle(userData)
         const roleRoutes = { rider: '/rider', dispatcher: '/dispatcher', retailer: '/retailer', customer: '/rider' }
         navigate(roleRoutes[userData.user?.role] || '/rider', { replace: true })

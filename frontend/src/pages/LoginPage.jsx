@@ -54,9 +54,21 @@ function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const data = params.get('data')
+    const oauthError = params.get('oauth_error')
+
+    if (oauthError) {
+      const messages = {
+        google_not_configured: 'Google sign-in is not configured yet.',
+        google_auth_denied: 'Google sign-in was cancelled or denied.',
+        google_missing_code: 'Google sign-in response was incomplete.',
+        google_callback_failed: 'Google sign-in failed. Please try again.',
+      }
+      setError(messages[oauthError] || 'Google sign-in failed. Please try again.')
+    }
+
     if (data) {
       try {
-        const userData = JSON.parse(decodeURIComponent(data))
+        const userData = JSON.parse(data)
         loginWithGoogle(userData)
       } catch {
         console.error('Failed to parse OAuth callback data')
@@ -83,7 +95,8 @@ function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const apiUrl = API_BASE_URL || '/api'
-    window.location.href = `${apiUrl}/auth/google`
+    const role = selectedRole || 'rider'
+    window.location.href = `${apiUrl}/auth/google?role=${encodeURIComponent(role)}`
   }
 
   return (
