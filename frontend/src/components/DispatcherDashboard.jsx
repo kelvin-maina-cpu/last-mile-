@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import DeliveryCard from './delivery/DeliveryCard'
+import EmptyState from './EmptyState'
 import RiderAssignment from './RiderAssignment'
 import { deliveryService, ApiError } from '../services/api/deliveryService'
 import { useDeliveryUpdates } from '../hooks/useSocket'
@@ -92,6 +93,30 @@ function DispatcherDashboard() {
         </div>
       </header>
 
+      {/* Stats Cards */}
+      <div className="stats-row">
+        <div className="stat-card">
+          <div className="stat-card__icon">📦</div>
+          <div className="stat-card__value">{statusCounts.all}</div>
+          <div className="stat-card__label">Total</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">⏳</div>
+          <div className="stat-card__value">{statusCounts.REQUESTED}</div>
+          <div className="stat-card__label">Pending</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">🏍️</div>
+          <div className="stat-card__value">{statusCounts.ASSIGNED + statusCounts.PICKED_UP}</div>
+          <div className="stat-card__label">In Transit</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">✅</div>
+          <div className="stat-card__value">{statusCounts.DELIVERED}</div>
+          <div className="stat-card__label">Delivered</div>
+        </div>
+      </div>
+
       {error && (
         <div className="error-banner" role="alert">
           <span className="error-banner__icon">!</span>
@@ -122,19 +147,11 @@ function DispatcherDashboard() {
           <p>Loading deliveries...</p>
         </div>
       ) : filteredDeliveries.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-state__icon">📦</p>
-          <p className="empty-state__title">
-            {filter === 'all'
-              ? 'No deliveries yet'
-              : `No ${filter.replace('_', ' ').toLowerCase()} deliveries`}
-          </p>
-          <p className="empty-state__hint">
-            {filter === 'all'
-              ? 'Create a new delivery from the Retailer page to get started.'
-              : 'Try selecting a different filter.'}
-          </p>
-        </div>
+        <EmptyState
+          icon="📦"
+          title={filter === 'all' ? 'No deliveries yet' : `No ${filter.replace('_', ' ').toLowerCase()} deliveries`}
+          hint={filter === 'all' ? 'Create a new delivery from the Retailer page to get started.' : 'Try selecting a different filter.'}
+        />
       ) : (
         <div className="delivery-grid">
           {filteredDeliveries.map((delivery) => {

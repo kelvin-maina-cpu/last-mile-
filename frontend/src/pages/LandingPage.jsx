@@ -23,6 +23,7 @@ function LandingPage() {
 
   return (
     <div className="landing">
+      <div className="landing__bg" aria-hidden="true" />
       {/* Header */}
       <header className="landing__header">
         <div className="landing__brand">

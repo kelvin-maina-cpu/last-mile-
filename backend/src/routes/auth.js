@@ -100,7 +100,29 @@ async function exchangeCodeForToken({ code, clientId, clientSecret, callbackUrl 
   return response.json();
 }
 
-async function fetchGoogleUser(accessToken) {
+function decodeIdToken(idToken) {
+  const parts = idToken.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Invalid ID token format');
+  }
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid ID token payload');
+  }
+  return payload;
+}
+
+async function fetchGoogleUser(accessToken, idToken) {
+  // Prefer decoding the ID token (no network call needed)
+  if (idToken) {
+    try {
+      return decodeIdToken(idToken);
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Failed to decode ID token, falling back to userinfo');
+    }
+  }
+
+  // Fallback: call userinfo endpoint
   const response = await fetch(GOOGLE_USERINFO_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -176,7 +198,7 @@ router.get('/google/callback', async (req, res) => {
       throw new Error('Missing access token from Google token response');
     }
 
-    const profile = await fetchGoogleUser(accessToken);
+    const profile = await fetchGoogleUser(accessToken, tokenData.id_token);
     const authPayload = {
       token: `google-${crypto.randomBytes(24).toString('hex')}`,
       user: {
@@ -197,7 +219,7 @@ router.get('/google/callback', async (req, res) => {
     const data = encodeURIComponent(JSON.stringify(authPayload));
     return res.redirect(`${frontendUrl}/auth/google/callback?data=${data}`);
   } catch (err) {
-    logger.error({ err: err.message }, 'Google OAuth callback failed');
+    logger.error({ err: err.message, stack: err.stack }, 'Google OAuth callback failed');
     return redirectToLoginWithError(res, 'google_callback_failed');
   }
 });

@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navigation from './components/Navigation'
 import Chatbot from './components/Chatbot'
+import QandAButton from './components/QandAButton'
+import { ToastProvider } from './context/ToastContext'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RetailerPage from './pages/RetailerPage'
@@ -115,11 +117,14 @@ function ThemeInitializer() {
 function App() {
   return (
     <AuthProvider>
-      <ThemeInitializer />
-      <div className="app">
-        <AppRoutes />
-        <Chatbot />
-      </div>
+      <ToastProvider>
+        <ThemeInitializer />
+        <div className="app">
+          <AppRoutes />
+          <Chatbot />
+          <QandAButton />
+        </div>
+      </ToastProvider>
     </AuthProvider>
   )
 }

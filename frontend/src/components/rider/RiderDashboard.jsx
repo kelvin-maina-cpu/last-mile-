@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import DeliveryCard from '../delivery/DeliveryCard'
+import EmptyState from '../EmptyState'
 import ConnectionIndicator from './ConnectionIndicator'
 import RiderRating from './RiderRating'
 import { deliveryService, ApiError } from '../../services/api/deliveryService'
@@ -78,6 +79,25 @@ function RiderDashboard() {
         <ConnectionIndicator state={connectionState} />
       </header>
 
+      {/* Stats Cards */}
+      <div className="stats-row">
+        <div className="stat-card">
+          <div className="stat-card__icon">📦</div>
+          <div className="stat-card__value">{deliveries.length}</div>
+          <div className="stat-card__label">Total</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">🔥</div>
+          <div className="stat-card__value">{activeDeliveries.length}</div>
+          <div className="stat-card__label">Active</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">✅</div>
+          <div className="stat-card__value">{completedDeliveries.length}</div>
+          <div className="stat-card__label">Completed</div>
+        </div>
+      </div>
+
       {error && (
         <div className="error-banner" role="alert">
           <span className="error-banner__icon">!</span>
@@ -100,7 +120,7 @@ function RiderDashboard() {
               <section className="rider-dashboard__section">
                 <h2>Active ({activeDeliveries.length})</h2>
                 {activeDeliveries.length === 0 ? (
-                  <p className="empty-state">No active deliveries.</p>
+                  <EmptyState icon="🏍️" title="No active deliveries" hint="New assignments will appear here." compact />
                 ) : (
                   <div className="delivery-grid">
                     {activeDeliveries.map((delivery) => (

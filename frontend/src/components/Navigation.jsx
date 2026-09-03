@@ -1,13 +1,20 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function Navigation() {
   const { user, logout, isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+    setMenuOpen(false)
+  }
+
+  const handleNavClick = () => {
+    setMenuOpen(false)
   }
 
   const roleIcons = {
@@ -23,13 +30,25 @@ function Navigation() {
         <span className="navigation__logo">Reflex</span>
         <span className="navigation__tagline">Delivery Coordination</span>
       </div>
-      <div className="navigation__links">
+
+      <button
+        className={`nav-hamburger ${menuOpen ? 'nav-hamburger--open' : ''}`}
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="Toggle navigation"
+      >
+        <span className="nav-hamburger__line" />
+        <span className="nav-hamburger__line" />
+        <span className="nav-hamburger__line" />
+      </button>
+
+      <div className={`navigation__links ${menuOpen ? 'navigation__links--open' : ''}`}>
         {isAuthenticated && user?.role === 'retailer' && (
           <NavLink
             to="/retailer"
             className={({ isActive }) =>
               `navigation__link ${isActive ? 'navigation__link--active' : ''}`
             }
+            onClick={handleNavClick}
           >
             Retailer
           </NavLink>
@@ -40,6 +59,7 @@ function Navigation() {
             className={({ isActive }) =>
               `navigation__link ${isActive ? 'navigation__link--active' : ''}`
             }
+            onClick={handleNavClick}
           >
             Dispatcher
           </NavLink>
@@ -50,6 +70,7 @@ function Navigation() {
             className={({ isActive }) =>
               `navigation__link ${isActive ? 'navigation__link--active' : ''}`
             }
+            onClick={handleNavClick}
           >
             Rider
           </NavLink>
