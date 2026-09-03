@@ -41,6 +41,15 @@ class DeliveryService {
   }
 
   // ============================================================
+  // RIDER: Get deliveries assigned to this rider
+  // GET /api/deliveries/rider/:riderId
+  // ============================================================
+  async getAssignedDeliveries(riderId) {
+    const response = await this.request(`/deliveries/rider/${riderId}`)
+    return response.deliveries || []
+  }
+
+  // ============================================================
   // GET single delivery by ID
   // GET /api/deliveries/:id
   // ============================================================

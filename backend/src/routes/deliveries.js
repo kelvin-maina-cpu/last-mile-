@@ -24,6 +24,21 @@ router.post('/', validateDeliveryCreation, async (req, res, next) => {
   }
 });
 
+// GET /api/deliveries/rider/:riderId — Get deliveries assigned to a specific rider
+router.get('/rider/:riderId', async (req, res, next) => {
+  try {
+    const { riderId } = req.params;
+    const deliveries = await deliveryService.listDeliveries();
+    // Filter by riderId — handles both MongoDB ObjectId and string IDs
+    const riderDeliveries = deliveries.filter(
+      (d) => String(d.riderId) === String(riderId)
+    );
+    res.json({ deliveries: riderDeliveries });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/deliveries — List all deliveries
 router.get('/', async (req, res, next) => {
   try {
