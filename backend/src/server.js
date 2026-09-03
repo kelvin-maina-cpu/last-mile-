@@ -14,6 +14,11 @@ const normalizedAllowedOrigins = new Set(
     .map((origin) => origin.replace(/\/+$/, ''))
 );
 
+if (process.env.NODE_ENV === 'production' && normalizedAllowedOrigins.size === 0) {
+  logger.fatal('No CORS origins configured. Set FRONTEND_URL and/or CORS_ORIGINS.');
+  process.exit(1);
+}
+
 // Create HTTP server from Express app
 const server = http.createServer(app);
 
