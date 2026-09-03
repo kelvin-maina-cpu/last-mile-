@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const riderService = require('../services/riderService');
 const RiderRating = require('../models/RiderRating');
@@ -18,6 +19,18 @@ router.get('/', async (req, res, next) => {
 router.get('/:id/rating', async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // If the ID is not a valid ObjectId, return empty rating data
+    // (Google OAuth users don't have a MongoDB rider document)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.json({
+        riderId: id,
+        averageRating: 0,
+        totalRatings: 0,
+        breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        recentRatings: [],
+      });
+    }
 
     // Aggregate stats for this rider
     const stats = await RiderRating.aggregate([
