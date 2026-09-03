@@ -14,6 +14,9 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// Render/other platforms terminate TLS at a proxy; trust forwarded protocol.
+app.set('trust proxy', 1);
+
 // --- Security Middleware ---
 app.use(httpsOnly);
 app.use(helmet());
