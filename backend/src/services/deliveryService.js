@@ -104,6 +104,15 @@ async function assignRider(deliveryId, riderId) {
 async function updateStatus(deliveryId, newStatus) {
   validateId(deliveryId, 'delivery');
 
+  const delivery = await Delivery.findById(deliveryId);
+  if (!delivery) {
+    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
+  }
+
+  if (delivery.status === 'DELIVERED' && newStatus !== 'DELIVERED') {
+    throw new InvalidTransitionError('Delivery is already delivered');
+  }
+
   const validStatusValues = ['PICKED_UP', 'DELIVERED'];
   if (!validStatusValues.includes(newStatus)) {
     throw new ValidationError(
@@ -112,15 +121,7 @@ async function updateStatus(deliveryId, newStatus) {
     );
   }
 
-  const delivery = await Delivery.findById(deliveryId);
-  if (!delivery) {
-    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
-  }
-
   if (!canTransition(delivery.status, newStatus)) {
-    if (delivery.status === 'DELIVERED') {
-      throw new InvalidTransitionError('Delivery is already delivered');
-    }
     throw new InvalidTransitionError(
       `Cannot transition from ${delivery.status} to ${newStatus}`
     );

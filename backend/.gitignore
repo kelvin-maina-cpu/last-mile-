@@ -1,5 +1,11 @@
 node_modules/
 .env
 .env.*
+.env.local
+.env.production
+.env.*.local
 !.env.example
 *.log
+dist/
+build/
+coverage/

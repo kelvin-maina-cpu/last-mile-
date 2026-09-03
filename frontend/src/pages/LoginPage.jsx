@@ -82,8 +82,7 @@ function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    // Fallback to localhost:3001 only for local dev; production uses VITE_API_URL
-    const apiUrl = API_BASE_URL || 'http://localhost:3001/api'
+    const apiUrl = API_BASE_URL || '/api'
     window.location.href = `${apiUrl}/auth/google`
   }
 

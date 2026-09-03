@@ -3,12 +3,20 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+      const error = new Error('MONGODB_URI environment variable is required');
+      logger.error({ err: error }, 'MongoDB connection configuration is missing');
+      throw error;
+    }
+
+    const conn = await mongoose.connect(uri);
     logger.info({ host: conn.connection.host }, 'MongoDB connected');
     return conn;
   } catch (error) {
     logger.error({ err: error }, 'MongoDB connection failed');
-    process.exit(1);
+    throw error;
   }
 };
 

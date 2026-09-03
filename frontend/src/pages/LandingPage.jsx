@@ -59,8 +59,7 @@ function LandingPage() {
             LOGIN
           </button>
           <button className="landing__btn landing__btn--google" onClick={() => {
-            // Fallback to localhost:3001 only for local dev; production uses VITE_API_URL
-            const apiUrl = API_BASE_URL || 'http://localhost:3001/api'
+            const apiUrl = API_BASE_URL || '/api'
             window.location.href = `${apiUrl}/auth/google`
           }}>
             <span className="landing__google-icon">G</span>

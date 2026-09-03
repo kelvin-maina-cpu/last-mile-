@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const requestId = require('./middleware/requestId');
 const logger = require('./utils/logger');
 const httpsOnly = require('./middleware/httpsOnly');
+const { buildAllowedOrigins } = require('./config/origins');
+const authRoutes = require('./routes/auth');
 const healthRoutes = require('./routes/health');
 const deliveryRoutes = require('./routes/deliveries');
 const riderRoutes = require('./routes/riders');
@@ -24,14 +26,9 @@ app.use(rateLimit({
 }));
 
 // --- CORS ---
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-  : [];
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
-}
+const allowedOrigins = buildAllowedOrigins();
 app.use(cors({
-  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  origin: allowedOrigins,
   credentials: true,
 }));
 
@@ -50,6 +47,7 @@ app.use((req, res, next) => {
 });
 
 // --- Routes ---
+app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/riders', riderRoutes);

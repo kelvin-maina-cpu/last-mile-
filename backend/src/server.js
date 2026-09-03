@@ -3,25 +3,20 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
 const connectDB = require('./config/db');
+const { buildAllowedOrigins } = require('./config/origins');
 const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = buildAllowedOrigins();
 
 // Create HTTP server from Express app
 const server = http.createServer(app);
 
 // --- CORS origins for Socket.IO ---
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-  : [];
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
-}
-
 // Initialize Socket.IO with restricted CORS
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins.length > 0 ? allowedOrigins : [],
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     methods: ['GET', 'POST', 'PATCH'],
   },
 });
@@ -45,10 +40,15 @@ app.set('io', io);
 
 // Start server
 const start = async () => {
-  await connectDB();
-  server.listen(PORT, () => {
-    logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Reflex backend started');
-  });
+  try {
+    await connectDB();
+    server.listen(PORT, '0.0.0.0', () => {
+      logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Reflex backend started');
+    });
+  } catch (error) {
+    logger.fatal({ err: error }, 'Failed to start backend');
+    process.exit(1);
+  }
 };
 
 // --- Graceful Shutdown ---

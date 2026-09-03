@@ -15,10 +15,14 @@ class SocketService {
 
     this.connectionState = 'connecting'
 
-    const url = WS_URL || 'http://localhost:3000'
+    if (!WS_URL) {
+      throw new Error('No websocket URL configured. Set VITE_API_URL or VITE_WS_URL.')
+    }
+
+    const url = WS_URL
 
     this.socket = io(url, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

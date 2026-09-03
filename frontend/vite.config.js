@@ -11,7 +11,7 @@ export default defineConfig({
       // When VITE_API_URL IS set, apiFetch uses absolute URLs and bypasses
       // the proxy entirely — this target is unused in that case.
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
     },
