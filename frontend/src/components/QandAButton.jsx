@@ -3,27 +3,27 @@ import { useState } from 'react'
 const FAQ_ITEMS = [
   {
     q: 'How do I track my delivery?',
-    a: 'Go to your dashboard and click on any active delivery to see real-time status updates and location tracking.',
+    a: 'Every delivery moves through REQUESTED → ASSIGNED → PICKED_UP → DELIVERED. Open the Dispatcher Dashboard to see every delivery\'s status, or open a single delivery\'s detail page to follow just that one.',
   },
   {
     q: 'How do I create a delivery request?',
-    a: 'Log in as a Retailer, click "New Delivery" and fill in the customer details, pickup/dropoff addresses, and item description.',
+    a: 'Log in as a Retailer and fill in the delivery form — customer name, phone, address, and item description. Submitting it creates a delivery in the REQUESTED state.',
   },
   {
     q: 'How do rider ratings work?',
-    a: 'After each delivery, customers can rate riders from 1-5 stars. Ratings affect rider visibility in assignment queues.',
+    a: 'Riders can see their own rating on their dashboard — average out of 5, star breakdown, and total ratings — aggregated from ratings tied to their deliveries. It shows "No ratings yet" until ratings exist; there isn\'t a rate-a-rider screen for customers yet.',
   },
   {
     q: 'What is proof of delivery?',
-    a: 'Proof of delivery is a photo or signature captured by the rider upon successful delivery, visible in the delivery details.',
+    a: 'When a rider marks a delivery complete, they verify the customer\'s ID and take a photo of the item. Both are shown on the delivery\'s detail page once it\'s DELIVERED.',
   },
   {
     q: 'How do I change my role?',
-    a: 'Log out and log back in, selecting a different role on the login screen.',
+    a: 'Log out and log back in — pick a different role (Retailer, Dispatcher, or Rider) on the login screen, or sign in with a different Google account.',
   },
   {
     q: 'How do I contact support?',
-    a: 'Use the chatbot (💬 button) or email support@reflex.co.ke for assistance.',
+    a: 'Use this chatbot (💬 button) — there isn\'t a support email set up yet.',
   },
 ]
 

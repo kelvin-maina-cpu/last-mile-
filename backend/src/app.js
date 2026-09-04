@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const healthRoutes = require('./routes/health');
 const deliveryRoutes = require('./routes/deliveries');
 const riderRoutes = require('./routes/riders');
+const chatRoutes = require('./routes/chat');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/riders', riderRoutes);
+app.use('/api/chat', chatRoutes);
 
 // --- 404 handler (for unmatched routes) ---
 app.use((req, res) => {

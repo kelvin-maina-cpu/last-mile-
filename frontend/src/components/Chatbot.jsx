@@ -138,8 +138,10 @@ function Chatbot() {
               </div>
             )}
 
-            {/* Show suggestions only at the start */}
-            {messages.length === 1 && (
+            {/* Keep suggestions available for the whole conversation, not
+                just before the first message — they used to vanish for
+                good the moment you sent anything. */}
+            {!loading && (
               <div className="chatbot__suggestions">
                 {SUGGESTED_QUESTIONS.map((q, i) => (
                   <button

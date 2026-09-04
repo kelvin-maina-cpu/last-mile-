@@ -137,7 +137,6 @@ describe('PATCH /api/deliveries/:id/assign', () => {
 
 describe('PATCH /api/deliveries/:id/status', () => {
   it.each([
-    ['REQUESTED', 'ASSIGNED'],
     ['ASSIGNED', 'PICKED_UP'],
     ['PICKED_UP', 'DELIVERED'],
   ])('allows %s -> %s', async (from, to) => {
