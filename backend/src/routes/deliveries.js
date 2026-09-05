@@ -85,7 +85,8 @@ router.patch('/:id/status', validateStatusUpdate, async (req, res, next) => {
   try {
     const delivery = await deliveryService.updateStatus(
       req.params.id,
-      req.body.status
+      req.body.status,
+      req.body.riderId
     );
 
     // Emit Socket.IO event after successful persistence
@@ -94,6 +95,20 @@ router.patch('/:id/status', validateStatusUpdate, async (req, res, next) => {
       io.emit('delivery:status-updated', { delivery });
     }
 
+    res.json({ delivery });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/deliveries/:id/complete - Complete with proof of delivery
+router.post('/:id/complete', async (req, res, next) => {
+  try {
+    const delivery = await deliveryService.completeDelivery(
+      req.params.id,
+      req.body.riderId,
+      req.body
+    );
     res.json({ delivery });
   } catch (error) {
     next(error);

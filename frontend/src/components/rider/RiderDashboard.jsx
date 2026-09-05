@@ -1,25 +1,36 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import DeliveryCard from '../delivery/DeliveryCard'
 import EmptyState from '../EmptyState'
 import ConnectionIndicator from './ConnectionIndicator'
 import RiderRating from './RiderRating'
+import RiderProgress from './RiderProgress'
+import RiderDeliveryCard from './RiderDeliveryCard'
 import { deliveryService, ApiError } from '../../services/api/deliveryService'
+import { getRiderDeliveryId, riderExperienceService } from '../../services/riderExperienceService'
 import { useDeliveryUpdates } from '../../hooks/useSocket'
 
 function RiderDashboard() {
   const { user, riderProfile } = useAuth()
-  const riderId = user?.id
+  const [rider, setRider] = useState(null)
+  const riderId = rider?._id || rider?.id
   const [deliveries, setDeliveries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetchDeliveries = useCallback(async () => {
-    if (!riderId) return
+    if (!user?.id) return
     try {
       setLoading(true)
       setError(null)
-      const data = await deliveryService.getAssignedDeliveries(riderId)
+      const resolvedRider = await deliveryService.getRiderByUserId(user.id)
+      if (!resolvedRider) {
+        setRider(null)
+        setDeliveries([])
+        setError('No rider profile is linked to this account.')
+        return
+      }
+      setRider(resolvedRider)
+      const data = await deliveryService.getAssignedDeliveries(resolvedRider._id || resolvedRider.id)
       setDeliveries(data)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -30,7 +41,7 @@ function RiderDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [riderId])
+  }, [user?.id])
 
   const handleDeliveryUpdate = useCallback((updatedDelivery) => {
     // Backend emits { delivery: {...} }
@@ -48,7 +59,7 @@ function RiderDashboard() {
   }, [])
 
   const handleDeliveryRemoved = useCallback((deliveryId) => {
-    setDeliveries((prev) => prev.filter((d) => d.id !== deliveryId))
+    setDeliveries((prev) => prev.filter((d) => getRiderDeliveryId(d) !== deliveryId))
   }, [])
 
   const handleRealtimeEvent = useCallback((payload) => {
@@ -61,8 +72,14 @@ function RiderDashboard() {
     fetchDeliveries()
   }, [fetchDeliveries])
 
-  const activeDeliveries = deliveries.filter((d) => d.status !== 'DELIVERED')
-  const completedDeliveries = deliveries.filter((d) => d.status === 'DELIVERED')
+  const getStatus = (delivery) => {
+    const localState = riderExperienceService.getDeliveryState(riderId, getRiderDeliveryId(delivery))
+    return localState.status || delivery.status
+  }
+
+  const activeDeliveries = deliveries.filter((d) => getStatus(d) !== 'DELIVERED')
+  const completedDeliveries = deliveries.filter((d) => getStatus(d) === 'DELIVERED')
+  const handleRiderError = (message) => setError(message)
 
   return (
     <div className="rider-dashboard">
@@ -124,7 +141,14 @@ function RiderDashboard() {
                 ) : (
                   <div className="delivery-grid">
                     {activeDeliveries.map((delivery) => (
-                      <DeliveryCard key={delivery.id} delivery={delivery} />
+                      <RiderDeliveryCard
+                        key={getRiderDeliveryId(delivery)}
+                        delivery={delivery}
+                        riderId={riderId}
+                        riderName={user?.name || 'Rider'}
+                        onUpdated={handleDeliveryUpdate}
+                        onError={handleRiderError}
+                      />
                     ))}
                   </div>
                 )}
@@ -135,7 +159,14 @@ function RiderDashboard() {
                   <h2>Completed ({completedDeliveries.length})</h2>
                   <div className="delivery-grid">
                     {completedDeliveries.map((delivery) => (
-                      <DeliveryCard key={delivery.id} delivery={delivery} />
+                      <RiderDeliveryCard
+                        key={getRiderDeliveryId(delivery)}
+                        delivery={delivery}
+                        riderId={riderId}
+                        riderName={user?.name || 'Rider'}
+                        onUpdated={handleDeliveryUpdate}
+                        onError={handleRiderError}
+                      />
                     ))}
                   </div>
                 </section>
@@ -145,7 +176,8 @@ function RiderDashboard() {
         </div>
 
         <aside className="rider-dashboard__sidebar">
-          <RiderRating />
+          <RiderProgress riderId={riderId} completedCount={completedDeliveries.length} />
+          <RiderRating riderId={riderId} />
         </aside>
       </div>
     </div>

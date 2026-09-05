@@ -40,4 +40,18 @@ describe('GET /api/riders', () => {
     expect(res.body.riders).toHaveLength(1);
     expect(res.body.riders[0].name).toBe('Grace Wanjiku');
   });
+
+  it('resolves a rider by the authenticated user ID', async () => {
+    await Rider.create([
+      { userId: 'rider-001', name: 'James Mwangi', phone: '+254712345678', available: true },
+      { userId: 'rider-002', name: 'Faith Wanjiku', phone: '+254723456789', available: true },
+    ]);
+
+    const res = await request(app).get('/api/riders?userId=rider-001');
+
+    expect(res.status).toBe(200);
+    expect(res.body.riders).toHaveLength(1);
+    expect(res.body.riders[0].userId).toBe('rider-001');
+    expect(res.body.riders[0].name).toBe('James Mwangi');
+  });
 });

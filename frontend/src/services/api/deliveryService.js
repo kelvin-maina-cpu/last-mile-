@@ -23,10 +23,12 @@ class DeliveryService {
   async createDelivery(deliveryData) {
     const response = await this.request('/deliveries', {
       method: 'POST',
-      body: JSON.stringify(deliveryData),
+      body: JSON.stringify({
+        ...deliveryData,
+        address: deliveryData.deliveryAddress,
+      }),
     })
-    // Backend returns { delivery: {...} }
-    return response.delivery
+    return normalizeDelivery(response.delivery || response)
   }
 
   // ============================================================
@@ -37,7 +39,7 @@ class DeliveryService {
     const query = status ? `?status=${status}` : ''
     const response = await this.request(`/deliveries${query}`)
     // Backend returns { deliveries: [...] }
-    return response.deliveries || []
+    return (response.deliveries || response || []).map(normalizeDelivery)
   }
 
   // ============================================================
@@ -45,8 +47,14 @@ class DeliveryService {
   // GET /api/deliveries/rider/:riderId
   // ============================================================
   async getAssignedDeliveries(riderId) {
-    const response = await this.request(`/deliveries/rider/${riderId}`)
-    return response.deliveries || []
+    try {
+      const response = await this.request(`/deliveries/rider/${riderId}`)
+      return (response.deliveries || response || []).map(normalizeDelivery)
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) throw error
+      const response = await this.request(`/riders/${riderId}/deliveries`)
+      return (response.deliveries || response || []).map(normalizeDelivery)
+    }
   }
 
   // ============================================================
@@ -56,7 +64,7 @@ class DeliveryService {
   async getDeliveryById(deliveryId) {
     const response = await this.request(`/deliveries/${deliveryId}`)
     // Backend returns { delivery: {...} }
-    return response.delivery
+    return normalizeDelivery(response.delivery || response)
   }
 
   // ============================================================
@@ -67,7 +75,13 @@ class DeliveryService {
     const query = available !== undefined ? `?available=${available}` : ''
     const response = await this.request(`/riders${query}`)
     // Backend returns { riders: [...] }
-    return response.riders || []
+    return response.riders || response || []
+  }
+
+  async getRiderByUserId(userId) {
+    const response = await this.request(`/riders?userId=${encodeURIComponent(userId)}`)
+    const riders = response.riders || response || []
+    return riders[0] || null
   }
 
   async getAvailableRiders() {
@@ -79,12 +93,21 @@ class DeliveryService {
   // PATCH /api/deliveries/:id/assign
   // ============================================================
   async assignRider(deliveryId, riderId) {
-    const response = await this.request(`/deliveries/${deliveryId}/assign`, {
-      method: 'PATCH',
-      body: JSON.stringify({ riderId }),
-    })
-    // Backend returns { delivery: {...} }
-    return response.delivery
+    const options = { body: JSON.stringify({ riderId }) }
+    try {
+      const response = await this.request(`/deliveries/${deliveryId}/assign`, {
+        ...options,
+        method: 'PATCH',
+      })
+      return normalizeDelivery(response.delivery || response)
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) throw error
+      const response = await this.request(`/deliveries/${deliveryId}/assign`, {
+        ...options,
+        method: 'POST',
+      })
+      return normalizeDelivery(response.delivery || response)
+    }
   }
 
   // ============================================================
@@ -92,22 +115,42 @@ class DeliveryService {
   // PATCH /api/deliveries/:id/status
   // Allowed values: PICKED_UP, DELIVERED
   // ============================================================
-  async updateDeliveryStatus(deliveryId, status) {
+  async updateDeliveryStatus(deliveryId, status, riderId) {
     const response = await this.request(`/deliveries/${deliveryId}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(riderId ? { riderId } : {}) }),
     })
     // Backend returns { delivery: {...} }
-    return response.delivery
+    return normalizeDelivery(response.delivery || response)
+  }
+
+  async completeDelivery(deliveryId, proof) {
+    const response = await this.request(`/deliveries/${deliveryId}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(proof),
+    })
+    return normalizeDelivery(response.delivery || response)
+  }
+
+  async submitRating(riderId, deliveryId, rating, comment) {
+    const response = await this.request(`/riders/${riderId}/rating`, {
+      method: 'POST',
+      body: JSON.stringify({ deliveryId, rating, comment }),
+    })
+    return response
   }
 
   // ============================================================
   // HELPER: Make API request
   // ============================================================
   async request(endpoint, options = {}) {
+    const token = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('reflex_token')
+      : null
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
@@ -141,3 +184,19 @@ class ApiError extends Error {
 
 export const deliveryService = new DeliveryService()
 export { ApiError }
+
+function normalizeDelivery(delivery) {
+  if (!delivery) return delivery
+  return {
+    ...delivery,
+    id: delivery.id || delivery._id,
+    customerName: delivery.customerName || delivery.customer_name,
+    customerPhone: delivery.customerPhone || delivery.customer_phone,
+    customerId: delivery.customerId || delivery.customer_id,
+    deliveryAddress: delivery.deliveryAddress || delivery.address,
+    itemDescription: delivery.itemDescription || delivery.item_description,
+    riderId: delivery.riderId || delivery.rider_id,
+    proofOfDelivery: delivery.proofOfDelivery || delivery.proof_of_delivery,
+    status: delivery.status === 'OPEN' ? 'REQUESTED' : delivery.status,
+  }
+}

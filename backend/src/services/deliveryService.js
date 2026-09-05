@@ -21,7 +21,8 @@ function validateId(id, resource) {
 const VALID_TRANSITIONS = {
   REQUESTED: ['ASSIGNED'],
   ASSIGNED: ['PICKED_UP'],
-  PICKED_UP: ['DELIVERED'],
+  PICKED_UP: ['OUT_FOR_DELIVERY'],
+  OUT_FOR_DELIVERY: ['DELIVERED'],
   DELIVERED: [],
 };
 
@@ -101,7 +102,7 @@ async function assignRider(deliveryId, riderId) {
 }
 
 // Update delivery status (enforce state machine)
-async function updateStatus(deliveryId, newStatus) {
+async function updateStatus(deliveryId, newStatus, riderId) {
   validateId(deliveryId, 'delivery');
 
   const delivery = await Delivery.findById(deliveryId);
@@ -109,11 +110,15 @@ async function updateStatus(deliveryId, newStatus) {
     throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
   }
 
+  if (riderId && String(delivery.riderId) !== String(riderId)) {
+    throw new NotFoundError('Delivery is not assigned to this rider', 'DELIVERY_NOT_FOUND');
+  }
+
   if (delivery.status === 'DELIVERED' && newStatus !== 'DELIVERED') {
     throw new InvalidTransitionError('Delivery is already delivered');
   }
 
-  const validStatusValues = ['PICKED_UP', 'DELIVERED'];
+  const validStatusValues = ['PICKED_UP', 'OUT_FOR_DELIVERY'];
   if (!validStatusValues.includes(newStatus)) {
     throw new ValidationError(
       `Invalid status value. Must be one of: ${validStatusValues.join(', ')}`,
@@ -133,12 +138,36 @@ async function updateStatus(deliveryId, newStatus) {
   return delivery;
 }
 
+async function completeDelivery(deliveryId, riderId, proof) {
+  validateId(deliveryId, 'delivery');
+  validateId(riderId, 'rider');
+  if (!proof || typeof proof.photo !== 'string' || proof.photo.length === 0) {
+    throw new ValidationError('Proof photo is required', ['Proof photo is required']);
+  }
+  const delivery = await Delivery.findById(deliveryId);
+  if (!delivery || String(delivery.riderId) !== String(riderId)) {
+    throw new NotFoundError('Delivery not found', 'DELIVERY_NOT_FOUND');
+  }
+  if (delivery.status !== 'OUT_FOR_DELIVERY') {
+    throw new InvalidTransitionError(`Cannot complete delivery from ${delivery.status}`);
+  }
+  delivery.status = 'DELIVERED';
+  delivery.proofOfDelivery = proof;
+  await delivery.save();
+  const rider = await Rider.findById(riderId);
+  rider.points += 10;
+  if (!rider.badges.includes('First Delivery')) rider.badges.push('First Delivery');
+  await rider.save();
+  return delivery;
+}
+
 module.exports = {
   createDelivery,
   listDeliveries,
   getDeliveryById,
   assignRider,
   updateStatus,
+  completeDelivery,
   canTransition,
   VALID_TRANSITIONS,
 };

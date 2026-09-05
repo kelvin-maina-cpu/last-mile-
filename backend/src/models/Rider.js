@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const riderSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     name: {
       type: String,
       required: [true, 'Rider name is required'],
@@ -19,6 +24,8 @@ const riderSchema = new mongoose.Schema(
       default: true,
       required: true,
     },
+    points: { type: Number, default: 0, min: 0 },
+    badges: { type: [String], default: [] },
   },
   {
     timestamps: true,

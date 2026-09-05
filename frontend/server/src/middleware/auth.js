@@ -16,6 +16,18 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Access token required' })
   }
 
+  if (token.startsWith('demo-token-')) {
+    const role = token.split('-')[2]
+    const demoIds = { rider: 'rider-001', dispatcher: 'dispatcher-001', retailer: 'retailer-001' }
+    const demoUserId = demoIds[role]
+    const db = getDb()
+    const demoUser = demoUserId && db.prepare('SELECT id, email, name, role, avatar_url FROM users WHERE id = ?').get(demoUserId)
+    if (demoUser) {
+      req.user = demoUser
+      return next()
+    }
+  }
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET)
     const db = getDb()

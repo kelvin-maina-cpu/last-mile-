@@ -37,6 +37,7 @@ const riderRatingSchema = new mongoose.Schema(
 // Index for rider rating queries
 riderRatingSchema.index({ riderId: 1 });
 riderRatingSchema.index({ riderId: 1, createdAt: -1 });
+riderRatingSchema.index({ deliveryId: 1 }, { unique: true, sparse: true });
 
 const RiderRating = mongoose.model('RiderRating', riderRatingSchema);
 

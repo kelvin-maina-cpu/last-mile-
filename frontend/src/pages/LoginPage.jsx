@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config/apiConfig'
+import GoogleIcon from '../components/GoogleIcon'
 
 const ROLES = [
   {
@@ -158,7 +159,7 @@ function LoginPage() {
           onClick={handleGoogleLogin}
           disabled={loading}
         >
-          <span className="landing__google-icon">G</span>
+          <GoogleIcon />
           Continue with Google
         </button>
 

@@ -33,6 +33,10 @@ router.get('/:id', optionalAuth, (req, res) => {
       return res.status(404).json({ error: 'Delivery not found' })
     }
 
+    if (req.user?.role === 'rider' && delivery.rider_id !== req.user.id) {
+      return res.status(403).json({ error: 'This delivery is assigned to another rider' })
+    }
+
     res.json({
       ...delivery,
       proof_of_delivery: delivery.proof_of_delivery ? JSON.parse(delivery.proof_of_delivery) : null,
@@ -81,7 +85,7 @@ router.patch('/:id/status', authenticateToken, (req, res) => {
   }
   try {
     const { status } = req.body
-    const validStatuses = ['OPEN', 'ASSIGNED', 'PICKED_UP', 'DELIVERED']
+    const validStatuses = ['PICKED_UP', 'OUT_FOR_DELIVERY']
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' })
@@ -92,6 +96,18 @@ router.patch('/:id/status', authenticateToken, (req, res) => {
 
     if (!delivery) {
       return res.status(404).json({ error: 'Delivery not found' })
+    }
+
+    if (req.user.role === 'rider' && delivery.rider_id !== req.user.id) {
+      return res.status(403).json({ error: 'This delivery is assigned to another rider' })
+    }
+
+    const transitions = {
+      ASSIGNED: 'PICKED_UP',
+      PICKED_UP: 'OUT_FOR_DELIVERY',
+    }
+    if (req.user.role === 'rider' && transitions[delivery.status] !== status) {
+      return res.status(409).json({ error: `Cannot transition from ${delivery.status} to ${status}` })
     }
 
     db.prepare('UPDATE deliveries SET status = ?, updated_at = datetime("now") WHERE id = ?').run(status, req.params.id)
@@ -128,12 +144,17 @@ router.post('/:id/assign', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Delivery not found' })
     }
 
+    if (delivery.status !== 'OPEN') {
+      return res.status(409).json({ error: 'Only open deliveries can be assigned' })
+    }
+
     const rider = db.prepare('SELECT * FROM users WHERE id = ? AND role = ?').get(riderId, 'rider')
     if (!rider) {
       return res.status(404).json({ error: 'Rider not found' })
     }
 
     db.prepare('UPDATE deliveries SET rider_id = ?, status = "ASSIGNED", updated_at = datetime("now") WHERE id = ?').run(riderId, req.params.id)
+    db.prepare('UPDATE rider_profiles SET available = ? WHERE user_id = ?').run(0, riderId)
 
     const updated = db.prepare('SELECT * FROM deliveries WHERE id = ?').get(req.params.id)
 
@@ -159,6 +180,16 @@ router.post('/:id/complete', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Delivery not found' })
     }
 
+    if (req.user.role !== 'rider' || delivery.rider_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the assigned rider can complete this delivery' })
+    }
+    if (delivery.status !== 'OUT_FOR_DELIVERY') {
+      return res.status(409).json({ error: `Cannot complete delivery from ${delivery.status}` })
+    }
+    if (typeof photo !== 'string' || photo.length < 1) {
+      return res.status(400).json({ error: 'Proof photo is required' })
+    }
+
     const proofOfDelivery = JSON.stringify({
       customerIdVerified: true,
       customerId,
@@ -168,6 +199,14 @@ router.post('/:id/complete', authenticateToken, (req, res) => {
     })
 
     db.prepare('UPDATE deliveries SET status = "DELIVERED", proof_of_delivery = ?, updated_at = datetime("now") WHERE id = ?').run(proofOfDelivery, req.params.id)
+
+    const profile = db.prepare('SELECT * FROM rider_profiles WHERE user_id = ?').get(req.user.id)
+    const badges = JSON.parse(profile?.badges || '[]')
+    const completed = db.prepare('SELECT * FROM deliveries WHERE rider_id = ?').all(req.user.id).filter(item => item.status === 'DELIVERED').length
+    if (completed >= 1 && !badges.includes('First Delivery')) badges.push('First Delivery')
+    if (completed >= 10 && !badges.includes('10 Deliveries')) badges.push('10 Deliveries')
+    if (completed >= 5 && !badges.includes('Reliable Rider')) badges.push('Reliable Rider')
+    db.prepare('UPDATE rider_profiles SET points = ?, badges = ? WHERE user_id = ?').run((profile?.points || 0) + 10, JSON.stringify(badges), req.user.id)
 
     const updated = db.prepare('SELECT * FROM deliveries WHERE id = ?').get(req.params.id)
 

@@ -5,6 +5,7 @@ import StatusBadge from './StatusBadge'
 import StatusControls from './StatusControls'
 import ProofOfDelivery from './ProofOfDelivery'
 import ProofViewer from './ProofViewer'
+import RiderDeliveryActions from '../rider/RiderDeliveryActions'
 
 function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
   const navigate = useNavigate()
@@ -41,6 +42,7 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
   }
 
   const riderName = user?.name || 'Rider'
+  const isRider = user?.role === 'rider'
 
   return (
     <div className="delivery-detail">
@@ -84,12 +86,22 @@ function DeliveryDetail({ delivery, onStatusUpdated, onError }) {
         </div>
 
         <div className="delivery-detail__actions">
-          <StatusControls
-            deliveryId={delivery._id || delivery.id}
-            currentStatus={delivery.status}
-            onStatusUpdated={handleStatusUpdated}
-            onError={handleError}
-          />
+          {isRider ? (
+            <RiderDeliveryActions
+              delivery={delivery}
+              riderId={delivery.riderId || user.id}
+              riderName={riderName}
+              onUpdated={onStatusUpdated}
+              onError={handleError}
+            />
+          ) : (
+            <StatusControls
+              deliveryId={delivery._id || delivery.id}
+              currentStatus={delivery.status}
+              onStatusUpdated={handleStatusUpdated}
+              onError={handleError}
+            />
+          )}
         </div>
       </div>
 

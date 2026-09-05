@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../config/apiConfig'
+import GoogleIcon from '../components/GoogleIcon'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -63,7 +64,7 @@ function LandingPage() {
             const apiUrl = API_BASE_URL || '/api'
             window.location.href = `${apiUrl}/auth/google`
           }}>
-            <span className="landing__google-icon">G</span>
+            <GoogleIcon />
             CONTINUE WITH GOOGLE
           </button>
         </div>

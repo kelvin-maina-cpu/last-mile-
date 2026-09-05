@@ -29,7 +29,7 @@ const deliverySchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'],
+        values: ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'DELIVERED'],
         message: '{VALUE} is not a valid status',
       },
       default: 'REQUESTED',
@@ -38,6 +38,10 @@ const deliverySchema = new mongoose.Schema(
     riderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Rider',
+      default: null,
+    },
+    proofOfDelivery: {
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
   },

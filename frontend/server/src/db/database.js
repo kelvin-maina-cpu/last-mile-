@@ -117,6 +117,13 @@ function executeQuery(sql, params, mode) {
     return { changes: 1 }
   }
 
+  if (normalizedSql.startsWith('select * from rider_ratings where delivery_id = ?')) {
+    return store.riderRatings.find(r => r.delivery_id === params[0])
+  }
+  if (normalizedSql.startsWith('select * from rider_ratings where rider_id = ?')) {
+    return store.riderRatings.filter(r => r.rider_id === params[0])
+  }
+
   // SELECT COUNT(*) operations
   if (normalizedSql.includes('select count(*)') && normalizedSql.includes('from users')) {
     return { count: store.users.length }
@@ -240,6 +247,20 @@ function executeQuery(sql, params, mode) {
     return { changes: delivery ? 1 : 0 }
   }
 
+  if (normalizedSql.includes('update rider_profiles set points = ?, badges = ?')) {
+    const profile = store.riderProfiles.find(p => p.user_id === params[2])
+    if (profile) {
+      profile.points = params[0]
+      profile.badges = params[1]
+    }
+    return { changes: profile ? 1 : 0 }
+  }
+  if (normalizedSql.includes('update rider_profiles set available = ?')) {
+    const profile = store.riderProfiles.find(p => p.user_id === params[1])
+    if (profile) profile.available = params[0]
+    return { changes: profile ? 1 : 0 }
+  }
+
   // UPDATE users
   if (normalizedSql.includes('update users set google_id')) {
     const user = store.users.find(u => u.id === params[2])
@@ -329,11 +350,11 @@ export function initializeDatabase() {
 
   // Rider profiles
   store.riderProfiles = [
-    { id: 'rp-001', user_id: 'rider-001', phone: '0712 345 678', vehicle_type: 'motorcycle', license_plate: 'KDA 123A', available: 1, latitude: -0.3031, longitude: 36.0800, created_at: '2026-08-28T00:00:00.000Z' },
-    { id: 'rp-002', user_id: 'rider-002', phone: '0723 456 789', vehicle_type: 'bicycle', license_plate: 'KDB 456B', available: 1, latitude: -0.2980, longitude: 36.0750, created_at: '2026-08-28T00:00:00.000Z' },
-    { id: 'rp-003', user_id: 'rider-003', phone: '0734 567 890', vehicle_type: 'motorcycle', license_plate: 'KDC 789C', available: 1, latitude: -0.3100, longitude: 36.0900, created_at: '2026-08-28T00:00:00.000Z' },
-    { id: 'rp-004', user_id: 'rider-004', phone: '0745 678 901', vehicle_type: 'motorcycle', license_plate: 'KDD 012D', available: 0, latitude: -0.3050, longitude: 36.0820, created_at: '2026-08-28T00:00:00.000Z' },
-    { id: 'rp-005', user_id: 'rider-005', phone: '0756 789 012', vehicle_type: 'bicycle', license_plate: 'KDE 345E', available: 1, latitude: -0.3080, longitude: 36.0850, created_at: '2026-08-28T00:00:00.000Z' },
+    { id: 'rp-001', user_id: 'rider-001', phone: '0712 345 678', vehicle_type: 'motorcycle', license_plate: 'KDA 123A', available: 1, points: 0, badges: '[]', latitude: -0.3031, longitude: 36.0800, created_at: '2026-08-28T00:00:00.000Z' },
+    { id: 'rp-002', user_id: 'rider-002', phone: '0723 456 789', vehicle_type: 'bicycle', license_plate: 'KDB 456B', available: 1, points: 0, badges: '[]', latitude: -0.2980, longitude: 36.0750, created_at: '2026-08-28T00:00:00.000Z' },
+    { id: 'rp-003', user_id: 'rider-003', phone: '0734 567 890', vehicle_type: 'motorcycle', license_plate: 'KDC 789C', available: 1, points: 0, badges: '[]', latitude: -0.3100, longitude: 36.0900, created_at: '2026-08-28T00:00:00.000Z' },
+    { id: 'rp-004', user_id: 'rider-004', phone: '0745 678 901', vehicle_type: 'motorcycle', license_plate: 'KDD 012D', available: 0, points: 0, badges: '[]', latitude: -0.3050, longitude: 36.0820, created_at: '2026-08-28T00:00:00.000Z' },
+    { id: 'rp-005', user_id: 'rider-005', phone: '0756 789 012', vehicle_type: 'bicycle', license_plate: 'KDE 345E', available: 1, points: 0, badges: '[]', latitude: -0.3080, longitude: 36.0850, created_at: '2026-08-28T00:00:00.000Z' },
   ]
 
   // Customers

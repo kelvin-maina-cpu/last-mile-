@@ -16,21 +16,21 @@ function StarRating({ rating, size = 20 }) {
   return <div className="star-rating">{stars}</div>
 }
 
-function RiderRating() {
+function RiderRating({ riderId }) {
   const { user, token } = useAuth()
   const [ratingData, setRatingData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!user || user.role !== 'rider' || !token) {
+    if (!user || user.role !== 'rider' || !token || !riderId) {
       setLoading(false)
       return
     }
 
     const fetchRating = async () => {
       try {
-        const response = await apiFetch(`/riders/${user.id}/rating`, {
+        const response = await apiFetch(`/riders/${riderId}/rating`, {
           headers: { 'Authorization': `Bearer ${token}` },
         })
 
@@ -48,7 +48,7 @@ function RiderRating() {
     }
 
     fetchRating()
-  }, [user, token])
+  }, [user, token, riderId])
 
   if (loading) {
     return (
