@@ -11,7 +11,7 @@ function RiderAssignment({ delivery, onSuccess, onCancel }) {
   useEffect(() => {
     const fetchRiders = async () => {
       try {
-        const data = await deliveryService.getRiders()
+        const data = await deliveryService.getAvailableRiders()
         setRiders(data)
       } catch (err) {
         if (err instanceof ApiError) {

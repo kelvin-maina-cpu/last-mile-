@@ -16,7 +16,13 @@ router.get('/', authenticateToken, (req, res) => {
       ORDER BY u.name
     `).all()
 
-    res.json(riders.map(r => ({
+    const filteredRiders = req.query.available === 'true'
+      ? riders.filter(r => r.available === 1)
+      : req.query.available === 'false'
+        ? riders.filter(r => r.available === 0)
+        : riders
+
+    res.json(filteredRiders.map(r => ({
       id: r.id,
       name: r.name,
       phone: r.phone,

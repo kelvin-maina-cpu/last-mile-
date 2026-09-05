@@ -153,6 +153,11 @@ router.post('/:id/assign', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Rider not found' })
     }
 
+    const riderProfile = db.prepare('SELECT * FROM rider_profiles WHERE user_id = ?').get(riderId)
+    if (!riderProfile || riderProfile.available !== 1) {
+      return res.status(409).json({ error: 'Rider is unavailable', code: 'RIDER_UNAVAILABLE' })
+    }
+
     db.prepare('UPDATE deliveries SET rider_id = ?, status = "ASSIGNED", updated_at = datetime("now") WHERE id = ?').run(riderId, req.params.id)
     db.prepare('UPDATE rider_profiles SET available = ? WHERE user_id = ?').run(0, riderId)
 
