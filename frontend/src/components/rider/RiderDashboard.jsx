@@ -176,8 +176,12 @@ function RiderDashboard() {
         </div>
 
         <aside className="rider-dashboard__sidebar">
-          <RiderProgress riderId={riderId} completedCount={completedDeliveries.length} />
-          <RiderRating riderId={riderId} />
+          {riderId && (
+            <>
+              <RiderProgress riderId={riderId} completedCount={completedDeliveries.length} />
+              <RiderRating riderId={riderId} />
+            </>
+          )}
         </aside>
       </div>
     </div>
