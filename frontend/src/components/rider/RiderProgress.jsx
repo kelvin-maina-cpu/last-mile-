@@ -9,6 +9,8 @@ function RiderProgress({ riderId, completedCount }) {
   const [progress, setProgress] = useState(() => riderExperienceService.getProgress(riderId, completedCount, 0))
 
   useEffect(() => {
+    if (!riderId || !token) return undefined
+
     let active = true
     const loadRating = async () => {
       try {
