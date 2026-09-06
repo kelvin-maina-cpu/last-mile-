@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config/apiConfig'
 import GoogleIcon from '../components/GoogleIcon'
+import { deliveryService } from '../services/api/deliveryService'
 
 const ROLES = [
   {
@@ -33,10 +34,37 @@ const ROLES = [
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { login, loginWithGoogle, isAuthenticated, user } = useAuth()
+  const { login, loginAsRider, loginWithGoogle, isAuthenticated, user } = useAuth()
   const [selectedRole, setSelectedRole] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [riders, setRiders] = useState([])
+  const [ridersLoading, setRidersLoading] = useState(false)
+  const [ridersError, setRidersError] = useState('')
+  const [selectedRiderId, setSelectedRiderId] = useState(null)
+
+  // Rider role picks from the actual seeded riders instead of always
+  // logging in as one hardcoded demo rider.
+  useEffect(() => {
+    if (selectedRole !== 'rider' || riders.length > 0) return
+
+    let cancelled = false
+    setRidersLoading(true)
+    setRidersError('')
+    deliveryService.getRiders()
+      .then((data) => {
+        if (cancelled) return
+        setRiders(data)
+      })
+      .catch(() => {
+        if (!cancelled) setRidersError('Could not load riders. Please try again.')
+      })
+      .finally(() => {
+        if (!cancelled) setRidersLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [selectedRole, riders.length])
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -86,7 +114,17 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      await login(role.demoEmail, 'password123')
+      if (role.id === 'rider') {
+        const rider = riders.find((r) => (r._id || r.id) === selectedRiderId)
+        if (!rider) {
+          setError('Select a rider to continue as.')
+          setLoading(false)
+          return
+        }
+        loginAsRider(rider)
+      } else {
+        await login(role.demoEmail, 'password123')
+      }
       navigate(role.route)
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')
@@ -127,7 +165,11 @@ function LoginPage() {
                 name="role"
                 value={role.id}
                 checked={selectedRole === role.id}
-                onChange={() => setSelectedRole(role.id)}
+                onChange={() => {
+                  setSelectedRole(role.id)
+                  setSelectedRiderId(null)
+                  setError('')
+                }}
                 className="role-option__radio"
               />
               <span className="role-option__icon">{role.icon}</span>
@@ -139,9 +181,55 @@ function LoginPage() {
           ))}
         </div>
 
+        {selectedRole === 'rider' && (
+          <div className="role-list rider-picker">
+            {ridersLoading && (
+              <div className="loading-state loading-state--compact">
+                <div className="loading-state__spinner" />
+                <p>Loading riders...</p>
+              </div>
+            )}
+
+            {ridersError && (
+              <div className="error-banner error-banner--compact" role="alert">
+                <span className="error-banner__message">{ridersError}</span>
+              </div>
+            )}
+
+            {!ridersLoading && !ridersError && riders.map((rider) => {
+              const riderId = rider._id || rider.id
+              return (
+                <label
+                  key={riderId}
+                  className={`role-option ${selectedRiderId === riderId ? 'role-option--selected' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="rider"
+                    value={riderId}
+                    checked={selectedRiderId === riderId}
+                    onChange={() => {
+                      setSelectedRiderId(riderId)
+                      setError('')
+                    }}
+                    className="role-option__radio"
+                  />
+                  <span className="role-option__icon">🏍️</span>
+                  <div className="role-option__info">
+                    <span className="role-option__label">{rider.name}</span>
+                    <span className="role-option__desc">
+                      {rider.available ? 'Available' : 'Busy'} · {rider.phone}
+                    </span>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+        )}
+
         <button
           className="btn btn--primary btn--block login-card__btn"
-          disabled={!selectedRole || loading}
+          disabled={!selectedRole || loading || (selectedRole === 'rider' && !selectedRiderId)}
           onClick={handleContinue}
         >
           {loading ? (
@@ -149,6 +237,10 @@ function LoginPage() {
               <span className="btn__spinner" />
               Signing in...
             </span>
+          ) : selectedRole === 'rider' ? (
+            selectedRiderId
+              ? `Continue as ${riders.find((r) => (r._id || r.id) === selectedRiderId)?.name}`
+              : 'Select a rider'
           ) : (
             `Continue as ${selectedRole ? ROLES.find((r) => r.id === selectedRole)?.label : '...'}`
           )}

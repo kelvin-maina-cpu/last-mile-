@@ -99,6 +99,34 @@ export function AuthProvider({ children }) {
     return { token: genericToken, user: genericUser }
   }, [])
 
+  // Demo mode: log in as a specific seeded rider (chosen from a picker)
+  // rather than the single hardcoded demo rider. `rider.userId` must match
+  // the `userId` field the backend stored on that Rider document, since
+  // RiderDashboard resolves the profile via GET /api/riders?userId=...
+  const loginAsRider = useCallback((rider) => {
+    const demoUser = {
+      id: rider.userId,
+      name: rider.name,
+      email: `${rider.userId}@reflex.co.ke`,
+      role: 'rider',
+      riderProfile: {
+        vehicle_type: 'Motorcycle',
+        phone: rider.phone,
+      },
+    }
+    const demoToken = `demo-token-rider-${Date.now()}`
+
+    localStorage.setItem('reflex_token', demoToken)
+    localStorage.setItem('reflex_user', JSON.stringify(demoUser))
+    localStorage.setItem('reflex_rider_profile', JSON.stringify(demoUser.riderProfile))
+
+    setToken(demoToken)
+    setUser(demoUser)
+    setRiderProfile(demoUser.riderProfile)
+
+    return { token: demoToken, user: demoUser }
+  }, [])
+
   const register = useCallback(async (email, password, name, role, phone) => {
     // Demo mode: same as login
     return login(email, password)
@@ -131,6 +159,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    loginAsRider,
     register,
     loginWithGoogle,
     logout,

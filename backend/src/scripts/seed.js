@@ -28,7 +28,7 @@ const Delivery = require('../models/Delivery');
 // as available.
 const riders = [
   { userId: 'rider-001', name: 'James Mwangi', phone: '+254712345678', available: true, points: 0, badges: [] },
-  { userId: 'rider-002', name: 'Faith Wanjiku', phone: '+254723456789', available: true },
+  { userId: 'rider-002', name: 'Faith Wanjiku', phone: '+254723456789', available: false }, // has a DELIVERED delivery
   { userId: 'rider-003', name: 'Peter Otieno', phone: '+254734567890', available: false }, // has a PICKED_UP delivery
   { userId: 'rider-004', name: 'Grace Achieng', phone: '+254745678901', available: true },
   { userId: 'rider-005', name: 'Brian Mutua', phone: '+254756789012', available: false }, // has an ASSIGNED delivery
@@ -40,7 +40,7 @@ const riders = [
 // Deliveries are built after riders are inserted so we can reference real
 // rider _ids for the ASSIGNED / PICKED_UP / DELIVERED examples below.
 function buildDeliveries(riderDocs) {
-  const [, , otieno, , mutua] = riderDocs;
+  const [, faith, otieno, , mutua] = riderDocs;
 
   return [
     // REQUESTED — no rider assigned yet (the default path for a brand-new
@@ -87,7 +87,7 @@ function buildDeliveries(riderDocs) {
       deliveryAddress: '9 Riverside Drive',
       itemDescription: 'Groceries (2 bags)',
       status: 'DELIVERED',
-      riderId: kiptoo._id,
+      riderId: faith._id,
     },
   ];
 }

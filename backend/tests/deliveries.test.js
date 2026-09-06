@@ -138,7 +138,7 @@ describe('PATCH /api/deliveries/:id/assign', () => {
 describe('PATCH /api/deliveries/:id/status', () => {
   it.each([
     ['ASSIGNED', 'PICKED_UP'],
-    ['PICKED_UP', 'DELIVERED'],
+    ['PICKED_UP', 'OUT_FOR_DELIVERY'],
   ])('allows %s -> %s', async (from, to) => {
     const delivery = await Delivery.create({ ...validDeliveryPayload, status: from });
 
