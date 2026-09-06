@@ -16,11 +16,10 @@ Mongoose casts `riderId` to an `ObjectId` and the schema declares `ref: 'Rider'`
 
 ## 3. `Rider.available` is a hand-maintained flag, not a computed one
 
-`available` is not derived from querying deliveries — it's a boolean the application flips. `assignRider()` sets it to `false` when a rider is assigned. **Nothing in the codebase currently sets it back to `true`.** There is no "mark delivery complete and free the rider" step, so once a rider is assigned, they stay `available: false` forever, including after their delivery reaches `DELIVERED` — the terminal state. This is distinct from the race-condition weakness already logged in `trade-offs.md` (Weakness 2); that one is about the assign operation not being atomic, this one is about there being no release operation at all.
+`available` is not derived from querying deliveries — it's a boolean the application flips. `assignRider()` sets it to `false` when a rider is assigned, and `completeDelivery()` sets it back to `true` once that rider's delivery reaches `DELIVERED`. This is distinct from the race-condition weakness already logged in `trade-offs.md` (Weakness 2); that one is about the assign operation not being atomic.
 
-- **Consequence:** over time, riders accumulate in the `unavailable` state even though they're free to take new work, and `GET /api/riders?available=true` under-reports who's actually available.
-- **Where this shows up in the seed data:** `backend/src/scripts/seed.js` deliberately seeds `available: false` for every rider that has an `ASSIGNED`, `PICKED_UP`, or `DELIVERED` delivery attached, specifically so the seeded database reflects a state the real application logic could actually produce, rather than a state that looks nicer but the app could never reach on its own.
-- **Fix would require:** either a `DeliveryService.updateStatus()` branch that sets `rider.available = true` when status becomes `DELIVERED`, or (more robust) computing "available" at read time as `available flag === true AND no delivery in {ASSIGNED, PICKED_UP} references this rider`.
+- **Where this shows up in the seed data:** `backend/src/scripts/seed.js` still seeds `available: false` for every rider it hands an `ASSIGNED` or `PICKED_UP` sample delivery, and `available: false` for the rider given the `DELIVERED` sample too — because that seeded `DELIVERED` document is inserted directly, bypassing `completeDelivery()`, so the release-on-completion logic never runs on it. Only a delivery that reaches `DELIVERED` through the real `/complete` endpoint frees its rider automatically.
+- **Known gap:** the release only fires on the happy path through `completeDelivery()`. A rider stuck with a delivery in a non-terminal state (abandoned mid-flight, no cancel/reassign flow exists) has no way to be freed short of a direct data fix.
 
 ## 4. `status` and `riderId` are not cross-validated by the schema
 

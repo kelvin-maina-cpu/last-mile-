@@ -157,6 +157,7 @@ async function completeDelivery(deliveryId, riderId, proof) {
   const rider = await Rider.findById(riderId);
   rider.points += 10;
   if (!rider.badges.includes('First Delivery')) rider.badges.push('First Delivery');
+  rider.available = true;
   await rider.save();
   return delivery;
 }

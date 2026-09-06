@@ -172,3 +172,28 @@ describe('PATCH /api/deliveries/:id/status', () => {
     expect(res.body.code).toBe('INVALID_TRANSITION');
   });
 });
+
+describe('POST /api/deliveries/:id/complete', () => {
+  it('marks the rider available again once the delivery is DELIVERED', async () => {
+    const rider = await Rider.create({
+      name: 'Grace Wanjiku',
+      phone: '+254734567890',
+      available: false,
+    });
+    const delivery = await Delivery.create({
+      ...validDeliveryPayload,
+      status: 'OUT_FOR_DELIVERY',
+      riderId: rider._id,
+    });
+
+    const res = await request(app)
+      .post(`/api/deliveries/${delivery._id}/complete`)
+      .send({ riderId: rider._id.toString(), photo: 'data:image/jpeg;base64,abc123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.delivery.status).toBe('DELIVERED');
+
+    const updatedRider = await Rider.findById(rider._id);
+    expect(updatedRider.available).toBe(true);
+  });
+});
