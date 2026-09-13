@@ -37,12 +37,6 @@ function Navbar({ isLight, onToggleTheme }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Lock body scroll while the mobile menu is open
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
-
   // Close menu on Escape for keyboard users
   useEffect(() => {
     if (!menuOpen) return
@@ -141,8 +135,7 @@ function Navbar({ isLight, onToggleTheme }) {
       <div
         id="home-mobile-menu"
         className={`home-nav__mobile ${menuOpen ? 'home-nav__mobile--open' : ''}`}
-        role="dialog"
-        aria-modal="true"
+        role="menu"
         aria-label="Menu"
       >
         <nav className="home-nav__mobile-links" aria-label="Mobile">

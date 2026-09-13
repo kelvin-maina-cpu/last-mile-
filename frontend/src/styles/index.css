@@ -1240,24 +1240,30 @@ body {
 /* Mobile menu (hidden by default, enabled in media query below) */
 .home-nav__mobile {
   display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  padding: 84px 24px 32px;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(240px, calc(100vw - 32px));
+  z-index: 20;
+  padding: 12px;
   flex-direction: column;
-  background: color-mix(in srgb, var(--color-black) 96%, transparent);
+  gap: 8px;
+  background: color-mix(in srgb, var(--color-black) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-8px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  overflow-y: auto;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 [data-theme="light"] .home-nav__mobile {
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .home-nav__mobile--open {
+  display: flex;
   opacity: 1;
   pointer-events: all;
   transform: translateY(0);
@@ -1266,13 +1272,19 @@ body {
 .home-nav__mobile-links {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .home-nav__mobile-links .home-nav__link {
-  font-size: 17px;
-  padding: 14px 8px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
-  border-radius: 0;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.home-nav__mobile-links .home-nav__link:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 45%, transparent);
 }
 
 .home-nav__mobile-links .home-nav__link::after {
@@ -1282,19 +1294,24 @@ body {
 .home-nav__mobile-auth {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
 .home-nav__mobile-auth .home-nav__login {
   border: 1px solid var(--color-border);
   text-align: center;
-  padding: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
 }
 
 .home-nav__mobile-auth .home-nav__cta {
   width: 100%;
   text-align: center;
+  font-size: 12px;
+  padding: 10px 14px;
 }
 
 .theme-toggle {
