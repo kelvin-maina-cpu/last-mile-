@@ -82,14 +82,9 @@ function Navbar({ isLight, onToggleTheme }) {
     ))
 
   const renderAuth = () => (
-    <>
-      <button className="home-nav__login" onClick={handleAuthClick}>
-        {isAuthenticated ? 'DASHBOARD' : 'LOGIN'}
-      </button>
-      <button className="btn btn--primary home-nav__cta" onClick={handleAuthClick}>
-        GET STARTED
-      </button>
-    </>
+    <button className="home-nav__login" onClick={handleAuthClick}>
+      {isAuthenticated ? 'DASHBOARD' : 'LOGIN'}
+    </button>
   )
 
   return (
@@ -141,7 +136,6 @@ function Navbar({ isLight, onToggleTheme }) {
         <nav className="home-nav__mobile-links" aria-label="Mobile">
           {renderLinks()}
         </nav>
-        <div className="home-nav__mobile-auth">{renderAuth()}</div>
       </div>
     </header>
   )
