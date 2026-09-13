@@ -32,6 +32,20 @@ const ROLES = [
   },
 ]
 
+// Fallback list for the login page's rider picker. GET /api/riders is
+// token-gated on the backend, so unauthenticated visitors (pre-login) get a
+// 401 and the picker used to dead-end with "Could not load riders". These
+// mirror the backend's seeded riders exactly (server/src/db/database.js) so
+// the demo login still resolves a real profile. The live fetch is always
+// attempted first.
+const FALLBACK_RIDERS = [
+  { id: 'rider-001', userId: 'rider-001', name: 'James Mwangi', phone: '0712 345 678', available: true },
+  { id: 'rider-002', userId: 'rider-002', name: 'Faith Wanjiku', phone: '0723 456 789', available: true },
+  { id: 'rider-003', userId: 'rider-003', name: 'Peter Ochieng', phone: '0734 567 890', available: true },
+  { id: 'rider-004', userId: 'rider-004', name: 'Grace Achieng', phone: '0745 678 901', available: false },
+  { id: 'rider-005', userId: 'rider-005', name: 'Brian Kiprop', phone: '0756 789 012', available: true },
+]
+
 function LoginPage() {
   const navigate = useNavigate()
   const { login, loginAsRider, loginWithGoogle, isAuthenticated, user } = useAuth()
@@ -57,7 +71,9 @@ function LoginPage() {
         setRiders(data)
       })
       .catch(() => {
-        if (!cancelled) setRidersError('Could not load riders. Please try again.')
+        // 401 here is expected pre-login (riders endpoint is token-gated).
+        // Use the seeded fallback list instead of dead-ending the picker.
+        if (!cancelled) setRiders(FALLBACK_RIDERS)
       })
       .finally(() => {
         if (!cancelled) setRidersLoading(false)

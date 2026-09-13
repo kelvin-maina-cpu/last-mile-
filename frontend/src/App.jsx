@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navigation from './components/Navigation'
@@ -7,6 +7,8 @@ import QandAButton from './components/QandAButton'
 import { ToastProvider } from './context/ToastContext'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
 import RetailerPage from './pages/RetailerPage'
 import DispatcherPage from './pages/DispatcherPage'
 import RiderDashboardPage from './pages/RiderDashboardPage'
@@ -68,6 +70,14 @@ function GoogleCallback() {
   )
 }
 
+// Homepage and legal pages are full-bleed; dashboards keep the original
+// centered .app container styling. Everything else in App is untouched.
+function AppShell({ children }) {
+  const location = useLocation()
+  const isFullBleed = ['/', '/privacy', '/terms'].includes(location.pathname)
+  return <div className={isFullBleed ? 'app-shell' : 'app'}>{children}</div>
+}
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth()
 
@@ -78,6 +88,9 @@ function AppRoutes() {
         isAuthenticated ? <Navigate to="/rider" replace /> : <LoginPage />
       } />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
+      {/* Public legal pages — no auth required */}
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="/retailer" element={
         <ProtectedRoute allowedRoles={['retailer', 'dispatcher']}>
           <Navigation />
@@ -119,11 +132,11 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <ThemeInitializer />
-        <div className="app">
+        <AppShell>
           <AppRoutes />
           <Chatbot />
           <QandAButton />
-        </div>
+        </AppShell>
       </ToastProvider>
     </AuthProvider>
   )
